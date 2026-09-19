@@ -1,0 +1,69 @@
+import type {
+  EventCategory,
+  EventSeverity,
+  EventStatus,
+} from "@/lib/validation/events";
+import {
+  CATEGORY_LABEL,
+  SEVERITY_LABEL,
+  STATUS_LABEL,
+} from "@/lib/formatting/events";
+
+const SEVERITY_CLASS: Record<EventSeverity, string> = {
+  critical: "bg-sev-critical-soft text-sev-critical",
+  high: "bg-sev-high-soft text-sev-high",
+  medium: "bg-sev-medium-soft text-sev-medium",
+  low: "bg-sev-low-soft text-sev-low",
+  info: "bg-sev-info-soft text-sev-info",
+};
+
+const SEVERITY_DOT: Record<EventSeverity, string> = {
+  critical: "bg-sev-critical",
+  high: "bg-sev-high",
+  medium: "bg-sev-medium",
+  low: "bg-sev-low",
+  info: "bg-sev-info",
+};
+
+const base =
+  "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]";
+
+/** Severity is never colour-only: label text + dot (§44). */
+export function SeverityBadge({ severity }: { severity: EventSeverity }) {
+  return (
+    <span className={`${base} ${SEVERITY_CLASS[severity]}`}>
+      <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${SEVERITY_DOT[severity]}`} />
+      {SEVERITY_LABEL[severity]}
+    </span>
+  );
+}
+
+export function CategoryBadge({ category }: { category: EventCategory }) {
+  return (
+    <span className={`${base} bg-surface-muted text-ink-secondary`}>
+      {CATEGORY_LABEL[category]}
+    </span>
+  );
+}
+
+export function StatusBadge({ status }: { status: EventStatus }) {
+  const cls =
+    status === "completed"
+      ? "bg-success-soft text-success"
+      : status === "unread"
+        ? "bg-accent-soft text-accent"
+        : "bg-surface-muted text-ink-secondary";
+  return <span className={`${base} ${cls}`}>{STATUS_LABEL[status]}</span>;
+}
+
+/** Fixture/demo data must be clearly labelled (§34). */
+export function DemoBadge() {
+  return (
+    <span
+      className={`${base} border border-dashed border-line-strong bg-transparent text-ink-muted`}
+      title="Deterministic demo fixture — not live protocol data"
+    >
+      Demo data
+    </span>
+  );
+}

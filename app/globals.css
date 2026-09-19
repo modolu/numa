@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/*
+ * Numa design tokens — calm, premium, action-oriented (NUMA_ARCHITECTURE.md
+ * §37). Warm off-white canvas, ink text, one restrained accent, and muted
+ * severity colours that are always paired with a text label (§44).
+ */
+:root {
+  --canvas: #f7f6f3;
+  --surface: #ffffff;
+  --surface-muted: #f1f0ec;
+  --ink: #17171a;
+  --ink-secondary: #4b4b55;
+  --ink-muted: #8a8a94;
+  --line: #e6e4df;
+  --line-strong: #d4d1ca;
+  --accent: #3b3fd6;
+  --accent-hover: #2f33b8;
+  --accent-soft: #eceefb;
+
+  --sev-critical: #b3261e;
+  --sev-critical-soft: #fbe9e7;
+  --sev-high: #b45309;
+  --sev-high-soft: #fdf0e0;
+  --sev-medium: #8a6a00;
+  --sev-medium-soft: #fbf3d6;
+  --sev-low: #3d5a80;
+  --sev-low-soft: #e7eef6;
+  --sev-info: #5f6470;
+  --sev-info-soft: #eef0f3;
+
+  --success: #1f7a4d;
+  --success-soft: #e4f4ea;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-sev-critical: var(--sev-critical);
+  --color-sev-critical-soft: var(--sev-critical-soft);
+  --color-sev-high: var(--sev-high);
+  --color-sev-high-soft: var(--sev-high-soft);
+  --color-sev-medium: var(--sev-medium);
+  --color-sev-medium-soft: var(--sev-medium-soft);
+  --color-sev-low: var(--sev-low);
+  --color-sev-low-soft: var(--sev-low-soft);
+  --color-sev-info: var(--sev-info);
+  --color-sev-info-soft: var(--sev-info-soft);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 14px;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible, consistent focus for keyboard users (§44). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Reduce motion respect for the few transitions we use. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
