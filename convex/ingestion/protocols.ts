@@ -1,0 +1,2 @@
+// Ingestion boundary: protocols
+export {};

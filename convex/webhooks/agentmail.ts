@@ -1,0 +1,2 @@
+// Webhook boundary: agentmail
+export {};

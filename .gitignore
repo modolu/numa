@@ -1,0 +1,7 @@
+node_modules
+.next
+.env
+.env.local
+.convex
+coverage
+.DS_Store

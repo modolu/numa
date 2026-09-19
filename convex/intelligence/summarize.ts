@@ -1,0 +1,2 @@
+// Intelligence boundary: summarize
+export {};

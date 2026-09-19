@@ -1,0 +1,2 @@
+// Scheduled job: scanWallets
+export {};
