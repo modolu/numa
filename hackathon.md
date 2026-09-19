@@ -8,11 +8,11 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** not deployed
 - **Components:** none
-- **Convex features:** schema, tables, indexes
+- **Convex features:** schema, tables, indexes, queries, mutations, internal functions, realtime queries
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-19T22:57:07Z
+- **Last updated:** 2026-09-19T23:45:47Z
 
 ## Log
 
@@ -29,6 +29,23 @@ modules, ingestion adapters (wallet, Firecrawl, protocols), intelligence steps
 enums and an onchain adapter interface live in `lib/`. No `package.json`,
 frontend, or Convex deployment yet. Convex features: schema, tables, indexes
 (`convex/schema.ts`, `lib/validation/events.ts`, `lib/onchain/provider.ts`).
+
+### 2026-09-19 - 968ecc9
+Numa now runs end to end: a user pastes one EVM wallet, five deterministic demo
+events flow through the real pipeline (fixture source → rawEvent → normalize →
+relevance → priority → deduplicating upsert → task), and the inbox, tasks and
+event detail screens update live through Convex subscriptions across browser
+tabs. Read, snooze, unsnooze, dismiss and complete are enforced by a lifecycle
+state machine; re-seeding reports every item as unchanged and creates no
+duplicate cards. Priority is the inspectable 0.30/0.25/0.20/0.15/0.10 weighted
+score with the score and factors stored on each event. Authentication is
+deferred: a single demo identity is isolated in one module while ownership
+checks already gate every read and write. Verified with lint, typecheck,
+58 Vitest/convex-test tests, a production build and a scripted two-client
+browser walkthrough. Convex features: schema, tables, indexes, queries,
+mutations, internal functions, realtime queries (`convex/schema.ts`,
+`convex/events.ts`, `convex/ingestion/pipeline.ts`,
+`convex/intelligence/priority.ts`, `components/inbox/InboxScreen.tsx`).
 
 ## Project notes
 
