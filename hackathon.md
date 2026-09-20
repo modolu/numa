@@ -8,11 +8,11 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** not deployed
 - **Components:** none
-- **Convex features:** schema, tables, indexes, queries, mutations, internal functions, realtime queries
+- **Convex features:** schema, tables, indexes, queries, mutations, actions, internal functions, scheduled functions, crons, realtime queries
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-19T23:45:47Z
+- **Last updated:** 2026-09-20T05:26:39Z
 
 ## Log
 
@@ -46,6 +46,24 @@ browser walkthrough. Convex features: schema, tables, indexes, queries,
 mutations, internal functions, realtime queries (`convex/schema.ts`,
 `convex/events.ts`, `convex/ingestion/pipeline.ts`,
 `convex/intelligence/priority.ts`, `components/inbox/InboxScreen.tsx`).
+
+### 2026-09-20 - 2e50b27
+First live onchain source. Refreshing a wallet now reads its primary `.eth`
+name and registration expiry from the official ENS contracts over standard
+Ethereum JSON-RPC (viem, public RPC, no API key), stores the observation as a
+`rawEvents` row, and runs it through the same normalize → relevance → priority
+→ dedupe path as the fixtures, so a live `ens_expiry` card appears in the
+inbox with a Live badge next to the demo ones. Rescans of the same state are
+no-ops; a renewal updates the same logical event without touching read/snooze
+state; a provider failure marks the wallet stale with a sanitized error and
+leaves last-known events intact. Wallets rescan every 6 hours via cron plus a
+"Refresh wallet" control with a cooldown. The adapter records whether the
+wallet is the registrant, wrapped owner, or only uses the name as its primary
+name. Verified live against a public wallet with a known ENS name in two
+browser sessions; 87 tests, lint, typecheck and production build green.
+Convex features: actions, internal functions, scheduled functions, crons
+(`lib/onchain/ens.ts`, `convex/ingestion/wallet.ts`,
+`convex/jobs/scanWallets.ts`, `convex/crons.ts`).
 
 ## Project notes
 
