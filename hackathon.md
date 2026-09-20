@@ -8,11 +8,11 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** not deployed
 - **Components:** none
-- **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, realtime queries
+- **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, HTTP actions, realtime queries
 - **Auth:** none
 - **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs)
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-20T09:48:11Z
+- **Last updated:** 2026-09-20T16:21:30Z
 
 ## Log
 
@@ -106,6 +106,29 @@ mocked and adversarial tests (157 total) until the account has credits.
 Convex features: Node actions, scheduled functions, internal functions
 (`lib/ai/validation.ts`, `lib/ai/openai.ts`, `convex/ingestion/interpret.ts`,
 `convex/interpretations.ts`).
+
+### 2026-09-20 - 6eeb8e4
+Email delivery through AgentMail. Numa now builds a deterministic daily
+brief from canonical inbox events only (top five by the priority order,
+snapshot persisted per user and local date), sends urgent alerts only for
+actionable items at or above the user's threshold with a hard floor of
+medium and escalation-only re-alerts, and schedules 24h/1h deadline
+reminders on the Convex scheduler with stable keys, reconciliation when a
+deadline moves, cancellation on complete/dismiss and a 30-day scheduling
+horizon. Every attempt is persisted with a dedupe key, bounded retries and
+a sanitized failure reason; the same identity is passed to AgentMail as its
+Idempotency-Key and each message renders from a fixed timestamp so retries
+are byte-identical. A Svix-verified webhook boundary is prepared but not
+registered. Live verification: two labelled test briefs were delivered from
+the configured AgentMail inbox and confirmed received, a provider-level
+replay under the same key returned the identical message id with no second
+email, and a demo urgent alert was delivered during regression. The
+regression also caught and fixed a real bug: a 2048 ENS expiry asked the
+scheduler for a reminder 21 years out. 32 new tests (189 total), all prior
+browser walkthroughs green. Convex features: HTTP actions, scheduled
+functions, crons, Node actions (`convex/notifications.ts`,
+`convex/briefs.ts`, `convex/ingestion/mail.ts`, `convex/http.ts`,
+`lib/notifications/`).
 
 ## Project notes
 
