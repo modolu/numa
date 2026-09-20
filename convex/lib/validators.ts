@@ -12,6 +12,8 @@ import {
   EVENT_TYPES,
   SOURCE_TYPES,
 } from "../../lib/validation/events";
+import { PROTOCOL_SOURCE_TYPES } from "../../lib/events/raw";
+import { CRAWL_POLICIES } from "../../lib/web/crawlPolicy";
 
 type LiteralUnion<T extends string> = VUnion<
   T,
@@ -36,6 +38,8 @@ export const eventStatusValidator = literalUnion(EVENT_STATUSES);
 export const eventTypeValidator = literalUnion(EVENT_TYPES);
 export const sourceTypeValidator = literalUnion(SOURCE_TYPES);
 export const chainFamilyValidator = literalUnion(CHAIN_FAMILIES);
+export const protocolSourceTypeValidator = literalUnion(PROTOCOL_SOURCE_TYPES);
+export const crawlPolicyValidator = literalUnion(CRAWL_POLICIES);
 
 /** Nested provenance object as used by the canonical NumaEvent contract. */
 export const eventSourceValidator = v.object({

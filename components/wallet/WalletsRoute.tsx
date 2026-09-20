@@ -8,6 +8,7 @@ import { useNow } from "@/components/ui/useNow";
 import { WalletOnboarding } from "./WalletOnboarding";
 import { RefreshWalletButton } from "./RefreshWalletButton";
 import { ScanHealth } from "./ScanHealth";
+import { Subscriptions } from "./Subscriptions";
 
 function WalletsScreen() {
   const wallets = useQuery(api.wallets.getWallets);
@@ -49,6 +50,8 @@ function WalletsScreen() {
           ))}
         </ul>
       ) : null}
+
+      <Subscriptions />
 
       <div className="mt-8">
         <WalletOnboarding compact />

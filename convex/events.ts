@@ -214,8 +214,27 @@ export const getEvent = query({
         .unique(),
     ]);
 
+    // Offchain events point at the monitored source that produced them.
+    const sourceId =
+      typeof event.metadata.sourceId === "string"
+        ? ctx.db.normalizeId("protocolSources", event.metadata.sourceId)
+        : null;
+    const monitoredSource = sourceId ? await ctx.db.get("protocolSources", sourceId) : null;
+
     return {
       event,
+      source: monitoredSource
+        ? {
+            _id: monitoredSource._id,
+            url: monitoredSource.url,
+            sourceType: monitoredSource.sourceType,
+            crawlPolicy: monitoredSource.crawlPolicy,
+            lastCrawledAt: monitoredSource.lastCrawledAt,
+            lastChangedAt: monitoredSource.lastChangedAt,
+            lastCrawlStatus: monitoredSource.lastCrawlStatus,
+            contentHash: monitoredSource.contentHash?.slice(0, 12),
+          }
+        : null,
       wallet: wallet
         ? { _id: wallet._id, address: wallet.address, label: wallet.label }
         : null,

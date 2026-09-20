@@ -20,8 +20,8 @@ import type {
   GovernanceDeadlinePayload,
   PositionRiskPayload,
   ProtocolMigrationPayload,
+  ProtocolUpdatePayload,
   RawEventInput,
-  RawEventPayload,
 } from "../../lib/events/raw";
 import {
   buildDedupeKey,
@@ -33,6 +33,7 @@ import {
   ensExpiryFactors,
   ensExpiryStage,
   exposureForUsd,
+  protocolUpdateFactors,
   urgencyForDeadline,
   type PriorityFactors,
 } from "./priority";
@@ -47,6 +48,7 @@ export type {
   GovernanceDeadlinePayload,
   PositionRiskPayload,
   ProtocolMigrationPayload,
+  ProtocolUpdatePayload,
   RawEventInput,
   RawEventPayload,
 } from "../../lib/events/raw";
@@ -61,6 +63,10 @@ export type NormalizationContext = {
   walletId: Id<"wallets">;
   walletAddress: string;
   protocolId?: Id<"protocols">;
+  /** Display name for the protocol (used in offchain update copy). */
+  protocolName?: string;
+  /** Whether the user's exposure to this protocol comes from demo data. */
+  exposureOrigin?: "live" | "demo";
   now: number;
 };
 
@@ -81,6 +87,7 @@ const SECURITY_IMPACT: Record<EventType, number> = {
   ens_expiry: 0.2, // superseded by ensExpiryFactors (stage-based)
   governance_deadline: 0.1,
   reward_deadline: 0.1,
+  protocol_update: 0,
 };
 
 const RISK_BUCKET_URGENCY: Record<RiskBucket, number> = {
@@ -371,8 +378,69 @@ function shapeProtocolMigration(
   };
 }
 
-function shape(payload: RawEventPayload, now: number): Shaped {
+const SOURCE_TYPE_NOUN: Record<ProtocolUpdatePayload["sourceType"], string> = {
+  docs: "documentation",
+  blog: "blog",
+  governance: "governance",
+  changelog: "changelog",
+  status: "status",
+  announcement: "announcements",
+};
+
+/**
+ * Deterministic, semantically neutral copy for a changed official page. It
+ * states that a monitored source changed and where — never what the change
+ * means or what the user must do, because nothing here has interpreted the
+ * content (§17/§18 guardrails).
+ */
+function shapeProtocolUpdate(
+  p: ProtocolUpdatePayload,
+  context: NormalizationContext,
+  observedAt: number,
+): Shaped {
+  const protocolName = context.protocolName ?? p.protocol;
+  const noun = SOURCE_TYPE_NOUN[p.sourceType] ?? p.sourceType;
+  const exposure =
+    context.exposureOrigin === "demo"
+      ? `Your demo inbox includes ${protocolName} exposure, so Numa is monitoring its official updates.`
+      : `You interact with ${protocolName}, so Numa is monitoring its official updates.`;
+  return {
+    eventType: "protocol_update",
+    category: "update",
+    externalId: `${p.sourceId}:${p.currentHash}`,
+    title: `${protocolName} official ${noun} source updated`,
+    summary: `An official monitored ${noun} page changed${p.title ? ` (“${p.title}”)` : ""}. Numa has not interpreted the change yet.`,
+    whyItMatters: exposure,
+    recommendedAction: "Review the source update",
+    actionUrl: p.sourceUrl,
+    occurredAt: observedAt,
+    requiresAction: false,
+    source: { type: "official_web", url: p.sourceUrl, ref: `${p.sourceId}#${p.currentHash.slice(0, 12)}` },
+    confidence: 0.95,
+    metadata: {
+      sourceId: p.sourceId,
+      sourceType: p.sourceType,
+      pageTitle: p.title,
+      previousHash: p.previousHash,
+      currentHash: p.currentHash,
+      excerpt: p.excerpt,
+      contentLength: p.contentLength,
+      exposureOrigin: context.exposureOrigin ?? "live",
+      interpreted: false,
+    },
+    priorityFactors: protocolUpdateFactors(),
+  };
+}
+
+function shape(
+  raw: RawEventInput,
+  now: number,
+  context: NormalizationContext,
+): Shaped {
+  const payload = raw.payload;
   switch (payload.kind) {
+    case "protocol_update":
+      return shapeProtocolUpdate(payload, context, raw.observedAt);
     case "ens_expiry":
       return shapeEnsExpiry(payload, now);
     case "position_risk":
@@ -404,7 +472,7 @@ export function normalizeRawEvent(
   raw: RawEventInput,
   context: NormalizationContext,
 ): NormalizedEvent {
-  const shaped = shape(raw.payload, context.now);
+  const shaped = shape(raw, context.now, context);
   const dedupeKey = buildDedupeKey({
     userId: context.userId,
     walletAddress: context.walletAddress,

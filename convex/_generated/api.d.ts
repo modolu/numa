@@ -17,6 +17,7 @@ import type * as ingestion_fixtures from "../ingestion/fixtures.js";
 import type * as ingestion_pipeline from "../ingestion/pipeline.js";
 import type * as ingestion_protocols from "../ingestion/protocols.js";
 import type * as ingestion_wallet from "../ingestion/wallet.js";
+import type * as ingestion_webAdapters from "../ingestion/webAdapters.js";
 import type * as intelligence_normalize from "../intelligence/normalize.js";
 import type * as intelligence_priority from "../intelligence/priority.js";
 import type * as intelligence_relevance from "../intelligence/relevance.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   "ingestion/pipeline": typeof ingestion_pipeline;
   "ingestion/protocols": typeof ingestion_protocols;
   "ingestion/wallet": typeof ingestion_wallet;
+  "ingestion/webAdapters": typeof ingestion_webAdapters;
   "intelligence/normalize": typeof intelligence_normalize;
   "intelligence/priority": typeof intelligence_priority;
   "intelligence/relevance": typeof intelligence_relevance;

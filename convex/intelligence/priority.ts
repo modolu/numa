@@ -183,3 +183,23 @@ export function ensExpiryFactors(
     sourceConfidence,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Generic official-source update (Firecrawl change detection, no semantic
+// classification yet). Deliberately quiet: urgency and action requirement
+// stay low and no financial/security impact is inferred; only the official
+// source earns confidence. Result: 0.03 + 0 + 0.02 + 0 + 0.095 = 0.145 → info.
+// The OpenAI milestone promotes semantically important changes later.
+// ---------------------------------------------------------------------------
+
+export const PROTOCOL_UPDATE_FACTORS: PriorityFactors = {
+  urgency: 0.1,
+  financialExposure: 0,
+  actionRequirement: 0.1,
+  securityImpact: 0,
+  sourceConfidence: 0.95,
+};
+
+export function protocolUpdateFactors(): PriorityFactors {
+  return { ...PROTOCOL_UPDATE_FACTORS };
+}

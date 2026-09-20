@@ -8,12 +8,29 @@
  */
 
 type BasePayload = {
-  /** The wallet this observation is about (lowercased EVM address). */
-  wallet: string;
   /** Protocol slug (matches `protocols.slug`). */
   protocol: string;
+  /** Chain the observation concerns; absent for chain-agnostic web sources. */
+  chainId?: number;
+};
+
+/** Onchain observations are always about one wallet. */
+type WalletPayload = BasePayload & {
+  /** The wallet this observation is about (lowercased EVM address). */
+  wallet: string;
   chainId: number;
 };
+
+/** Official source families (NUMA_ARCHITECTURE.md §9 `source_type`). */
+export const PROTOCOL_SOURCE_TYPES = [
+  "docs",
+  "blog",
+  "governance",
+  "changelog",
+  "status",
+  "announcement",
+] as const;
+export type ProtocolSourceType = (typeof PROTOCOL_SOURCE_TYPES)[number];
 
 /** How the monitored wallet relates to an ENS name. */
 export type EnsRelationship =
@@ -24,7 +41,7 @@ export type EnsRelationship =
   /** Wallet's reverse record points at the name but another address holds it. */
   | "primary_name";
 
-export type EnsExpiryPayload = BasePayload & {
+export type EnsExpiryPayload = WalletPayload & {
   kind: "ens_expiry";
   name: string;
   /** Registration expiry, ms since epoch. */
@@ -42,7 +59,7 @@ export type EnsExpiryPayload = BasePayload & {
   observedBlock?: number;
 };
 
-export type PositionRiskPayload = BasePayload & {
+export type PositionRiskPayload = WalletPayload & {
   kind: "position_risk";
   market: string;
   healthFactor: number;
@@ -55,7 +72,7 @@ export type PositionRiskPayload = BasePayload & {
   poolContract?: string;
 };
 
-export type GovernanceDeadlinePayload = BasePayload & {
+export type GovernanceDeadlinePayload = WalletPayload & {
   kind: "governance_deadline";
   daoName: string;
   proposalId: string;
@@ -67,7 +84,7 @@ export type GovernanceDeadlinePayload = BasePayload & {
   sourceUrl: string;
 };
 
-export type BridgeClaimReadyPayload = BasePayload & {
+export type BridgeClaimReadyPayload = WalletPayload & {
   kind: "bridge_claim_ready";
   amount: number;
   asset: string;
@@ -77,7 +94,7 @@ export type BridgeClaimReadyPayload = BasePayload & {
   claimUrl: string;
 };
 
-export type ProtocolMigrationPayload = BasePayload & {
+export type ProtocolMigrationPayload = WalletPayload & {
   kind: "protocol_migration";
   announcementId: string;
   headline: string;
@@ -88,12 +105,32 @@ export type ProtocolMigrationPayload = BasePayload & {
   migrationUrl: string;
 };
 
+/**
+ * A monitored official page changed. Deterministic and semantically neutral:
+ * it records *that* an official source changed and what changed, never what
+ * the change means (that needs the OpenAI milestone, §17).
+ */
+export type ProtocolUpdatePayload = BasePayload & {
+  kind: "protocol_update";
+  /** `protocolSources` id, as a string so the payload stays plain data. */
+  sourceId: string;
+  sourceUrl: string;
+  sourceType: ProtocolSourceType;
+  previousHash: string;
+  currentHash: string;
+  title?: string;
+  /** Bounded excerpt of the new normalized content for audit/UI. */
+  excerpt: string;
+  contentLength: number;
+};
+
 export type RawEventPayload =
   | EnsExpiryPayload
   | PositionRiskPayload
   | GovernanceDeadlinePayload
   | BridgeClaimReadyPayload
-  | ProtocolMigrationPayload;
+  | ProtocolMigrationPayload
+  | ProtocolUpdatePayload;
 
 export const RAW_PAYLOAD_KINDS: readonly RawEventPayload["kind"][] = [
   "ens_expiry",
@@ -101,7 +138,15 @@ export const RAW_PAYLOAD_KINDS: readonly RawEventPayload["kind"][] = [
   "governance_deadline",
   "bridge_claim_ready",
   "protocol_migration",
+  "protocol_update",
 ];
+
+/** Kinds that are about one wallet (carry `wallet`). */
+export function isWalletPayload(
+  payload: RawEventPayload,
+): payload is Exclude<RawEventPayload, ProtocolUpdatePayload> {
+  return payload.kind !== "protocol_update";
+}
 
 export type RawEventInput = {
   source: string;
@@ -118,9 +163,13 @@ export function isRawEventPayload(value: unknown): value is RawEventPayload {
   return (
     typeof record.kind === "string" &&
     (RAW_PAYLOAD_KINDS as readonly string[]).includes(record.kind) &&
-    typeof record.wallet === "string" &&
     typeof record.protocol === "string" &&
-    typeof record.chainId === "number"
+    (record.chainId === undefined || typeof record.chainId === "number") &&
+    (record.kind === "protocol_update"
+      ? typeof record.sourceId === "string" &&
+        typeof record.currentHash === "string" &&
+        typeof record.sourceUrl === "string"
+      : typeof record.wallet === "string" && typeof record.chainId === "number")
   );
 }
 

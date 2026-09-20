@@ -40,6 +40,7 @@ export const EVENT_TYPE_LABEL: Record<EventType, string> = {
   protocol_migration: "Protocol migration",
   position_risk: "Position risk",
   reward_deadline: "Reward deadline",
+  protocol_update: "Official source update",
 };
 
 export const CHAIN_LABEL: Record<number, string> = {

@@ -43,6 +43,8 @@ export const EVENT_TYPES = [
   "protocol_migration",
   "position_risk",
   "reward_deadline",
+  // Generic "an official monitored source changed" (offchain, deterministic).
+  "protocol_update",
 ] as const;
 
 /** Provenance families (§10 `source.type`). */

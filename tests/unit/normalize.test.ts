@@ -11,6 +11,7 @@ import {
 } from "../../convex/intelligence/normalize";
 import { scorePriority } from "../../convex/intelligence/priority";
 import { evaluateRelevance } from "../../convex/intelligence/relevance";
+import { isWalletPayload } from "../../lib/events/raw";
 
 const WALLET = "0xd8da6bf26964af9d7eed9e03e53415d37aa96045";
 const NOW = Date.UTC(2026, 8, 20, 9, 30); // 2026-09-20T09:30Z
@@ -38,7 +39,7 @@ describe("fixture source", () => {
     for (const raw of raws) {
       expect(raw.isDemo).toBe(true);
       expect(raw.source).toBe("fixture");
-      expect(raw.payload.wallet).toBe(WALLET);
+      expect(isWalletPayload(raw.payload) && raw.payload.wallet).toBe(WALLET);
     }
   });
 
@@ -147,6 +148,7 @@ describe("relevance", () => {
 
   test("an observation about another wallet is not", () => {
     const raw = byKind("ens_expiry");
+    if (raw.payload.kind !== "ens_expiry") throw new Error("unreachable");
     const decision = evaluateRelevance(
       { ...raw, payload: { ...raw.payload, wallet: "0x" + "1".repeat(40) } },
       relevanceContext,

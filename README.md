@@ -37,6 +37,15 @@ wallet** to read live onchain sources or **Load demo events** to run the
 deterministic fixtures through the same ingestion pipeline.
 
 ## Live sources
+- **Official protocol sources** (`lib/web/`, `convex/sources.ts`): a small
+  allow-listed registry of official Aave, Arbitrum and ENS pages is scraped
+  with Firecrawl (single-page `scrape`, markdown only), normalized and
+  SHA-256 hashed by Numa. Only a changed hash creates a raw change record,
+  and it reaches an inbox only for wallets with exposure to that protocol
+  (`userProtocolSubscriptions`). Requires `FIRECRAWL_API_KEY` as a Convex
+  deployment env var; without it sources show as unavailable and nothing
+  else breaks. Crawls are scheduled every 15 minutes and run per source
+  policy (governance 30 min, updates 3 h, docs 6 h).
 - **ENS expiry** (`lib/onchain/ens.ts`): the wallet's primary `.eth` name is
   resolved through the official ENS contracts over standard Ethereum JSON-RPC
   (viem). No API key is required; set `ONCHAIN_PROVIDER_URL` as a Convex

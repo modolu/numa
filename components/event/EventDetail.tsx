@@ -91,7 +91,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
     );
   }
 
-  const { event, wallet, protocol, task } = result;
+  const { event, wallet, protocol, task, source } = result;
   const m = event.metadata as Record<string, unknown>;
   const overdue = event.deadline !== undefined && now !== null && event.deadline < now;
 
@@ -275,6 +275,51 @@ export function EventDetail({ eventId }: { eventId: string }) {
                 </a>
               </Row>
             )}
+          </dl>
+        </section>
+      )}
+
+      {source && (
+        <section className="mt-6 rounded-(--radius-card) border border-line bg-surface px-5">
+          <h2 className="pt-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+            Source monitoring
+          </h2>
+          <dl className="divide-y divide-line">
+            <Row label="Monitored page">
+              <a href={source.url} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
+                {source.url.replace(/^https?:\/\//, "")}
+              </a>
+              <span className="text-ink-muted"> · {source.sourceType}</span>
+            </Row>
+            <Row label="Last crawl">
+              {source.lastCrawledAt !== undefined ? (
+                <>
+                  {formatAbsolute(source.lastCrawledAt)}
+                  {now !== null && <span className="text-ink-muted"> · {formatRelative(source.lastCrawledAt, now)}</span>}
+                </>
+              ) : "—"}
+              {source.lastCrawlStatus === "failed" && (
+                <span className="block text-[12px] text-sev-high">Provider currently unavailable — showing last known state</span>
+              )}
+            </Row>
+            {typeof m.currentHash === "string" && (
+              <Row label="Content version">
+                <span className="font-mono text-[12px]">{String(m.currentHash).slice(0, 12)}</span>
+                {typeof m.previousHash === "string" && (
+                  <span className="font-mono text-[12px] text-ink-muted"> (was {String(m.previousHash).slice(0, 12)})</span>
+                )}
+              </Row>
+            )}
+            {typeof m.excerpt === "string" && m.excerpt.length > 0 && (
+              <Row label="Page excerpt">
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md bg-surface-muted p-3 font-mono text-[12px] leading-5 text-ink-secondary">
+                  {String(m.excerpt)}
+                </pre>
+              </Row>
+            )}
+            <Row label="Interpretation">
+              <span className="text-ink-secondary">Not yet interpreted — change detected from official source content only.</span>
+            </Row>
           </dl>
         </section>
       )}

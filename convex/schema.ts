@@ -13,6 +13,9 @@
  *  - events.snoozeUntil    — snooze timestamp so the scheduler wake-up (§8)
  *                             can be added without a schema change.
  *  - events.readAt / completedAt / dismissedAt — lifecycle audit stamps (§32).
+ *  - protocolSources.previous/latest content fields + crawl health — change
+ *                             detection state and provenance (§13, §14).
+ *  - userProtocolSubscriptions.origin / evidence — live vs demo exposure.
  *  - wallets.lastScanAttemptAt / lastScanStatus / lastScanError — scan health
  *                             so provider failures are visible without
  *                             touching last-known-good event data (§28, §45).
@@ -21,6 +24,8 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
   chainFamilyValidator,
+  crawlPolicyValidator,
+  protocolSourceTypeValidator,
   eventCategoryValidator,
   eventSeverityValidator,
   eventStatusValidator,
@@ -67,24 +72,37 @@ export default defineSchema({
     officialDomain: v.string(),
     iconUrl: v.optional(v.string()),
     supportedChains: v.array(v.number()),
+    // Additional official hostnames allowed for sources (docs/forum domains).
+    officialHosts: v.optional(v.array(v.string())),
   }).index("by_slug", ["slug"]),
 
+  // Official pages Numa monitors (§9, §13). The latest normalized content is
+  // kept on the row (bounded) together with the previous/current hash: enough
+  // for change detection, provenance and later interpretation without an
+  // unbounded snapshot history.
   protocolSources: defineTable({
     protocolId: v.id("protocols"),
-    sourceType: v.union(
-      v.literal("docs"),
-      v.literal("blog"),
-      v.literal("governance"),
-      v.literal("changelog"),
-      v.literal("status"),
-      v.literal("announcement"),
-    ),
+    sourceType: protocolSourceTypeValidator,
     url: v.string(),
-    crawlPolicy: v.string(),
+    crawlPolicy: crawlPolicyValidator,
+    isActive: v.boolean(),
     lastCrawledAt: v.optional(v.number()),
     contentHash: v.optional(v.string()),
-    isActive: v.boolean(),
-  }).index("by_protocol", ["protocolId"]),
+    previousContentHash: v.optional(v.string()),
+    latestContent: v.optional(v.string()),
+    latestTitle: v.optional(v.string()),
+    latestContentLength: v.optional(v.number()),
+    lastChangedAt: v.optional(v.number()),
+    // Crawl health (§28, §45). `lastCrawledAt` is the last *successful* crawl.
+    lastCrawlAttemptAt: v.optional(v.number()),
+    lastCrawlStatus: v.optional(
+      v.union(v.literal("ok"), v.literal("failed"), v.literal("running")),
+    ),
+    lastCrawlError: v.optional(v.string()),
+  })
+    .index("by_protocol", ["protocolId"])
+    .index("by_url", ["url"])
+    .index("by_is_active", ["isActive"]),
 
   // Source-specific discovery before normalization. Kept for replay,
   // debugging, auditability and deduplication (§9).
@@ -186,6 +204,8 @@ export default defineSchema({
     sentViaEmail: v.boolean(),
   }).index("by_user_and_period", ["userId", "period"]),
 
+  // Derived from evidence Numa already holds (events for the wallet). This is
+  // the personalization gate for offchain monitoring (§12.2, §15).
   userProtocolSubscriptions: defineTable({
     userId: v.id("users"),
     walletId: v.id("wallets"),
@@ -193,9 +213,15 @@ export default defineSchema({
     firstSeenAt: v.number(),
     lastSeenAt: v.number(),
     confidence: v.number(),
+    // "live" = backed by a real onchain observation; "demo" = fixture only.
+    origin: v.union(v.literal("live"), v.literal("demo")),
+    // Event types that established the exposure, e.g. "ens_expiry".
+    evidence: v.array(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_protocol", ["userId", "protocolId"]),
+    .index("by_user_and_protocol", ["userId", "protocolId"])
+    .index("by_protocol", ["protocolId"])
+    .index("by_wallet_and_protocol", ["walletId", "protocolId"]),
 
   notificationPreferences: defineTable({
     userId: v.id("users"),

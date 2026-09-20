@@ -70,6 +70,9 @@ export function InboxCard({
         {event.recommendedAction && (
           <span className="font-medium text-ink">{event.recommendedAction}</span>
         )}
+        {event.sourceType === "official_web" && (
+          <span className="text-ink-muted">Official web</span>
+        )}
         {event.deadline !== undefined && (
           <span
             className={overdue ? "font-medium text-sev-critical" : "text-ink-muted"}

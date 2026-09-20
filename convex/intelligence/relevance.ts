@@ -11,11 +11,18 @@
  * the same `RelevanceDecision` contract later.
  */
 import type { Id } from "../_generated/dataModel";
-import type { RawEventInput } from "../../lib/events/raw";
+import { isWalletPayload, type RawEventInput } from "../../lib/events/raw";
+
+export type SubscribedProtocol = {
+  slug: string;
+  origin: "live" | "demo";
+};
 
 export type RelevanceContext = {
   walletId: Id<"wallets">;
   walletAddress: string;
+  /** Protocols this wallet is subscribed to — the offchain relevance gate (§15). */
+  subscriptions?: SubscribedProtocol[];
 };
 
 export type RelevanceDecision = {
@@ -29,6 +36,30 @@ export function evaluateRelevance(
   raw: RawEventInput,
   context: RelevanceContext,
 ): RelevanceDecision {
+  if (!isWalletPayload(raw.payload)) {
+    // Offchain source change: relevant only through a protocol subscription.
+    const subscription = context.subscriptions?.find(
+      (s) => s.slug === raw.payload.protocol,
+    );
+    if (!subscription) {
+      return {
+        relevant: false,
+        confidence: 1,
+        reason: `No exposure to ${raw.payload.protocol} for this wallet`,
+        affectedWalletIds: [],
+      };
+    }
+    return {
+      relevant: true,
+      confidence: subscription.origin === "live" ? 0.9 : 0.6,
+      reason:
+        subscription.origin === "live"
+          ? `Wallet has live exposure to ${raw.payload.protocol}`
+          : `Demo-derived exposure to ${raw.payload.protocol} (not real wallet analysis)`,
+      affectedWalletIds: [context.walletId],
+    };
+  }
+
   const target = raw.payload.wallet.toLowerCase();
   const wallet = context.walletAddress.toLowerCase();
 

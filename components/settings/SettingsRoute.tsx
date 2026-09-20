@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { InlineError } from "@/components/ui/States";
 import { errorMessage } from "@/components/ui/errors";
+import { MonitoredSources } from "@/components/sources/MonitoredSources";
 
 function SettingsScreen() {
   const me = useQuery(api.users.me);
@@ -53,6 +54,8 @@ function SettingsScreen() {
                 : `Signed in as ${me.displayName ?? "user"}.`}
         </p>
       </section>
+
+      <MonitoredSources />
 
       <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
         <h2 className="text-[15px] font-medium">Demo data</h2>
