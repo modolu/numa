@@ -12,6 +12,8 @@ import { attentionHeadline } from "@/lib/formatting/events";
 import { greetingForHour } from "@/lib/formatting/time";
 import { shortenAddress } from "@/lib/validation/wallet";
 import { InboxCard } from "./InboxCard";
+import { RefreshWalletButton } from "@/components/wallet/RefreshWalletButton";
+import { ScanHealth } from "@/components/wallet/ScanHealth";
 
 function SeedDemoButton({
   wallet,
@@ -73,23 +75,26 @@ export function InboxScreen({ wallets }: { wallets: Doc<"wallets">[] }) {
     <>
       <Header now={now} count={attention.length} wallet={primary} />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <p className="text-[13px] text-ink-muted" aria-live="polite">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <p className="pt-2 text-[13px] text-ink-muted" aria-live="polite">
           {seedMessage ?? ""}
         </p>
-        {!isEmpty && (
-          <SeedDemoButton
-            wallet={primary}
-            variant="secondary"
-            onResult={setSeedMessage}
-          />
-        )}
+        <div className="flex items-start gap-2">
+          {!isEmpty && (
+            <SeedDemoButton
+              wallet={primary}
+              variant="secondary"
+              onResult={setSeedMessage}
+            />
+          )}
+          <RefreshWalletButton wallet={primary} />
+        </div>
       </div>
 
       {isEmpty ? (
         <EmptyState
           title="Nothing here yet."
-          description="Live wallet scanning arrives in a later milestone. Load the deterministic demo events to see how Numa prioritizes an inbox."
+          description="Refresh the wallet to check live onchain sources (ENS today), or load the deterministic demo events to see how Numa prioritizes a full inbox."
           action={<SeedDemoButton wallet={primary} onResult={setSeedMessage} />}
         />
       ) : attention.length === 0 ? (
@@ -168,10 +173,13 @@ function Header({
       <p className="mt-2 text-[17px] text-ink-secondary" aria-live="polite">
         {count === null ? "Checking your inbox…" : attentionHeadline(count)}
       </p>
-      <p className="mt-3 font-mono text-[12px] text-ink-muted">
-        {wallet.label ? `${wallet.label} · ` : ""}
-        {shortenAddress(wallet.address, 6)}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="font-mono text-[12px] text-ink-muted">
+          {wallet.label ? `${wallet.label} · ` : ""}
+          {shortenAddress(wallet.address, 6)}
+        </p>
+        <ScanHealth wallet={wallet} now={now} />
+      </div>
     </header>
   );
 }

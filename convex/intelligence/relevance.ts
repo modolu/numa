@@ -11,7 +11,7 @@
  * the same `RelevanceDecision` contract later.
  */
 import type { Id } from "../_generated/dataModel";
-import type { RawEventInput } from "./normalize";
+import type { RawEventInput } from "../../lib/events/raw";
 
 export type RelevanceContext = {
   walletId: Id<"wallets">;
@@ -54,6 +54,24 @@ export function evaluateRelevance(
       relevant: true,
       confidence: 0.9,
       reason: "Wallet has active exposure to the affected protocol",
+      affectedWalletIds: [context.walletId],
+    };
+  }
+
+  if (raw.payload.kind === "ens_expiry") {
+    if (raw.payload.relationship === "primary_name") {
+      return {
+        relevant: true,
+        confidence: 0.8,
+        reason:
+          "Name is the wallet's primary ENS name; the registration is held by another address",
+        affectedWalletIds: [context.walletId],
+      };
+    }
+    return {
+      relevant: true,
+      confidence: 1,
+      reason: `Wallet holds the ENS registration (${raw.payload.relationship})`,
       affectedWalletIds: [context.walletId],
     };
   }

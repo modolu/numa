@@ -11,6 +11,7 @@
 import type * as briefs from "../briefs.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
+import type * as ingestion_adapters from "../ingestion/adapters.js";
 import type * as ingestion_firecrawl from "../ingestion/firecrawl.js";
 import type * as ingestion_fixtures from "../ingestion/fixtures.js";
 import type * as ingestion_pipeline from "../ingestion/pipeline.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   briefs: typeof briefs;
   crons: typeof crons;
   events: typeof events;
+  "ingestion/adapters": typeof ingestion_adapters;
   "ingestion/firecrawl": typeof ingestion_firecrawl;
   "ingestion/fixtures": typeof ingestion_fixtures;
   "ingestion/pipeline": typeof ingestion_pipeline;

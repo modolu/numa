@@ -67,3 +67,15 @@ export function DemoBadge() {
     </span>
   );
 }
+
+/** Non-fixture events come from a live source; make that as visible as demo data. */
+export function LiveBadge() {
+  return (
+    <span
+      className={`${base} bg-success-soft text-success`}
+      title="Read from a live onchain source"
+    >
+      Live
+    </span>
+  );
+}

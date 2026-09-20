@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import {
   CategoryBadge,
   DemoBadge,
+  LiveBadge,
   SeverityBadge,
   StatusBadge,
 } from "@/components/ui/Badge";
@@ -57,6 +58,12 @@ function formatUsd(value: string | number): string {
   }).format(value);
 }
 
+const RELATIONSHIP_LABEL: Record<string, string> = {
+  registrant: "This wallet holds the registration",
+  wrapped_owner: "This wallet holds the registration (wrapped)",
+  primary_name: "Primary name of this wallet; registration held elsewhere",
+};
+
 const SOURCE_LABEL = {
   onchain: "Onchain data",
   official_web: "Official website",
@@ -102,7 +109,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
           <SeverityBadge severity={event.severity} />
           <CategoryBadge category={event.category} />
           <StatusBadge status={event.status} />
-          {event.isDemo && <DemoBadge />}
+          {event.isDemo ? <DemoBadge /> : <LiveBadge />}
         </div>
         <h1
           id="event-title"
@@ -215,6 +222,8 @@ export function EventDetail({ eventId }: { eventId: string }) {
 
       {(isPresent(m.previousValue) ||
         isPresent(m.currentValue) ||
+        isPresent(m.relationship) ||
+        isPresent(m.gracePeriodEndsAt) ||
         isPresent(m.exposureUsd) ||
         isPresent(m.relatedTransaction) ||
         isPresent(m.relatedContract) ||
@@ -232,6 +241,17 @@ export function EventDetail({ eventId }: { eventId: string }) {
             )}
             {isPresent(m.exposureUsd) && (
               <Row label="Exposure">{formatUsd(m.exposureUsd)}</Row>
+            )}
+            {isPresent(m.relationship) && (
+              <Row label="Relationship">{RELATIONSHIP_LABEL[String(m.relationship)] ?? String(m.relationship)}</Row>
+            )}
+            {isPresent(m.registrant) && (
+              <Row label="Held by">
+                <span className="font-mono text-[12px]">{String(m.registrant)}</span>
+              </Row>
+            )}
+            {typeof m.gracePeriodEndsAt === "number" && (
+              <Row label="Grace period ends">{formatAbsolute(m.gracePeriodEndsAt)}</Row>
             )}
             {isPresent(m.relatedTransaction) && (
               <Row label="Transaction">

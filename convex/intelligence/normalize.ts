@@ -14,6 +14,15 @@ import type {
   NumaEvent,
   NumaEventSource,
 } from "../../lib/validation/events";
+import type {
+  BridgeClaimReadyPayload,
+  EnsExpiryPayload,
+  GovernanceDeadlinePayload,
+  PositionRiskPayload,
+  ProtocolMigrationPayload,
+  RawEventInput,
+  RawEventPayload,
+} from "../../lib/events/raw";
 import {
   buildDedupeKey,
   positionRiskExternalId,
@@ -21,103 +30,27 @@ import {
   type RiskBucket,
 } from "../lib/dedupe";
 import {
+  ensExpiryFactors,
+  ensExpiryStage,
   exposureForUsd,
   urgencyForDeadline,
   type PriorityFactors,
 } from "./priority";
 
 // ---------------------------------------------------------------------------
-// Raw payload contract (what adapters produce)
+// Raw payload contract lives in lib/events/raw.ts (shared with adapters).
 // ---------------------------------------------------------------------------
 
-type BasePayload = {
-  /** The wallet this observation is about (lowercased EVM address). */
-  wallet: string;
-  /** Protocol slug (matches `protocols.slug`). */
-  protocol: string;
-  chainId: number;
-};
-
-export type EnsExpiryPayload = BasePayload & {
-  kind: "ens_expiry";
-  name: string;
-  expiresAt: number;
-  renewUrl: string;
-  registrarContract?: string;
-};
-
-export type PositionRiskPayload = BasePayload & {
-  kind: "position_risk";
-  market: string;
-  healthFactor: number;
-  previousHealthFactor?: number;
-  collateralUsd: number;
-  debtUsd: number;
-  collateralAsset: string;
-  debtAsset: string;
-  positionUrl: string;
-  poolContract?: string;
-};
-
-export type GovernanceDeadlinePayload = BasePayload & {
-  kind: "governance_deadline";
-  daoName: string;
-  proposalId: string;
-  proposalTitle: string;
-  votingEndsAt: number;
-  votingPower: number;
-  votingPowerSymbol: string;
-  voteUrl: string;
-  sourceUrl: string;
-};
-
-export type BridgeClaimReadyPayload = BasePayload & {
-  kind: "bridge_claim_ready";
-  amount: number;
-  asset: string;
-  amountUsd?: number;
-  withdrawalTxHash: string;
-  readySince: number;
-  claimUrl: string;
-};
-
-export type ProtocolMigrationPayload = BasePayload & {
-  kind: "protocol_migration";
-  announcementId: string;
-  headline: string;
-  details: string;
-  sourceUrl: string;
-  migrateBy?: number;
-  exposureUsd: number;
-  migrationUrl: string;
-};
-
-export type RawEventPayload =
-  | EnsExpiryPayload
-  | PositionRiskPayload
-  | GovernanceDeadlinePayload
-  | BridgeClaimReadyPayload
-  | ProtocolMigrationPayload;
-
-export type RawEventInput = {
-  source: string;
-  sourceEventId: string;
-  observedAt: number;
-  payload: RawEventPayload;
-  /** Fixture/demo data flag, surfaced in the UI (§34). */
-  isDemo: boolean;
-};
-
-export function isRawEventPayload(value: unknown): value is RawEventPayload {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.kind === "string" &&
-    typeof record.wallet === "string" &&
-    typeof record.protocol === "string" &&
-    typeof record.chainId === "number"
-  );
-}
+export type {
+  BridgeClaimReadyPayload,
+  EnsExpiryPayload,
+  GovernanceDeadlinePayload,
+  PositionRiskPayload,
+  ProtocolMigrationPayload,
+  RawEventInput,
+  RawEventPayload,
+} from "../../lib/events/raw";
+export { isRawEventPayload } from "../../lib/events/raw";
 
 // ---------------------------------------------------------------------------
 // Normalized output
@@ -145,7 +78,7 @@ const SECURITY_IMPACT: Record<EventType, number> = {
   token_approval_warning: 0.8,
   protocol_migration: 0.4,
   bridge_claim_ready: 0.2,
-  ens_expiry: 0.2,
+  ens_expiry: 0.2, // superseded by ensExpiryFactors (stage-based)
   governance_deadline: 0.1,
   reward_deadline: 0.1,
 };
@@ -199,40 +132,85 @@ type Shaped = {
   priorityFactors: PriorityFactors;
 };
 
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+const ENS_RELATIONSHIP_CONFIDENCE: Record<EnsExpiryPayload["relationship"], number> = {
+  registrant: 0.95,
+  wrapped_owner: 0.95,
+  primary_name: 0.8,
+};
+
+/**
+ * ENS expiry copy is state-based, not time-based: titles use a stage
+ * (expired / soon / a date) and absolute dates so a re-scan in the same stage
+ * is byte-identical, while the UI formats "in 12 days" from `deadline` live.
+ */
 function shapeEnsExpiry(p: EnsExpiryPayload, now: number): Shaped {
-  const remaining = p.expiresAt - now;
-  const expired = remaining <= 0;
+  const stage = ensExpiryStage(p.expiresAt, now);
+  const expired = stage === "expired";
+  const soon = stage === "imminent" || stage === "week" || stage === "month";
+  const expiryDate = formatDate(p.expiresAt);
+  const confidence = ENS_RELATIONSHIP_CONFIDENCE[p.relationship];
+
+  const title = expired
+    ? `${p.name} has expired`
+    : soon
+      ? `${p.name} expires soon`
+      : `${p.name} expires on ${expiryDate}`;
+
+  const holding =
+    p.relationship === "primary_name"
+      ? `This wallet uses ${p.name} as its primary name; the registration is held by another address.`
+      : `This wallet holds the registration${p.relationship === "wrapped_owner" ? " (wrapped)" : ""}.`;
+
+  const summary = expired
+    ? `The registration for ${p.name} lapsed on ${expiryDate}${
+        p.gracePeriodEndsAt !== undefined
+          ? ` and can still be renewed until ${formatDate(p.gracePeriodEndsAt)}`
+          : ""
+      }. ${holding}`
+    : `Your ENS name ${p.name} is registered until ${expiryDate}. ${holding}`;
+
   return {
     eventType: "ens_expiry",
     category: "deadline",
     externalId: p.name,
-    title: expired
-      ? `${p.name} has expired`
-      : `${p.name} expires in ${formatHours(remaining)}`,
-    summary: expired
-      ? `The ENS name ${p.name} owned by this wallet is past its expiry date and is in its grace period.`
-      : `The ENS name ${p.name} owned by this wallet is due for renewal.`,
+    title,
+    summary,
     whyItMatters:
-      "If the name lapses it enters a grace period and can eventually be registered by someone else, breaking anything that resolves to it.",
-    recommendedAction: "Renew domain",
+      "If the registration expires and passes the grace period, the name is released and anyone can register it — anything that resolves to it stops pointing at you.",
+    recommendedAction: "Review and renew the registration",
     actionUrl: p.renewUrl,
     deadline: p.expiresAt,
     requiresAction: true,
-    source: { type: "onchain", url: p.renewUrl, ref: p.registrarContract },
-    confidence: 0.95,
+    source: {
+      type: "onchain",
+      url: p.renewUrl,
+      ref: p.tokenId !== undefined ? `${p.registrarContract ?? "registrar"}#${p.tokenId}` : p.registrarContract,
+    },
+    confidence,
     metadata: {
       name: p.name,
       currentValue: new Date(p.expiresAt).toISOString(),
+      expiresAt: p.expiresAt,
+      gracePeriodEndsAt: p.gracePeriodEndsAt,
+      expiryStage: stage,
+      relationship: p.relationship,
+      registrant: p.registrant,
+      tokenId: p.tokenId,
+      // observedBlock stays on the raw observation only: it changes every
+      // scan and would defeat the "unchanged" fingerprint.
       relatedContract: p.registrarContract,
       officialActionUrl: p.renewUrl,
     },
-    priorityFactors: {
-      urgency: urgencyForDeadline(p.expiresAt, now),
-      financialExposure: 0.1,
-      actionRequirement: 1,
-      securityImpact: SECURITY_IMPACT.ens_expiry,
-      sourceConfidence: 0.95,
-    },
+    priorityFactors: ensExpiryFactors(p.expiresAt, now, confidence),
   };
 }
 

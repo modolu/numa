@@ -13,6 +13,9 @@
  *  - events.snoozeUntil    — snooze timestamp so the scheduler wake-up (§8)
  *                             can be added without a schema change.
  *  - events.readAt / completedAt / dismissedAt — lifecycle audit stamps (§32).
+ *  - wallets.lastScanAttemptAt / lastScanStatus / lastScanError — scan health
+ *                             so provider failures are visible without
+ *                             touching last-known-good event data (§28, §45).
  */
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -44,7 +47,14 @@ export default defineSchema({
     label: v.optional(v.string()),
     isPrimary: v.boolean(),
     createdAt: v.number(),
+    // Last *successful* scan. Never cleared by a failed scan (§28).
     lastScannedAt: v.optional(v.number()),
+    // Minimal scan-health metadata for stale/failed states (§45).
+    lastScanAttemptAt: v.optional(v.number()),
+    lastScanStatus: v.optional(
+      v.union(v.literal("ok"), v.literal("failed"), v.literal("running")),
+    ),
+    lastScanError: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_address", ["address"])

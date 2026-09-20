@@ -120,3 +120,66 @@ export function exposureForUsd(usd: number | undefined): number {
   if (usd < 100_000) return 0.85;
   return 1;
 }
+
+// ---------------------------------------------------------------------------
+// ENS expiry factors (Phase 4). Deadline proximity drives urgency; losing a
+// name is an identity/security concern that sharpens as expiry nears.
+//
+//   expired (in grace period)  urgency 1.00  security 0.70
+//   <= 3 days                  urgency 1.00  security 0.60
+//   <= 7 days                  urgency 0.80  security 0.40
+//   <= 30 days                 urgency 0.40  security 0.30
+//   <= 90 days                 urgency 0.15  security 0.20
+//   > 90 days                  urgency 0.05  security 0.10
+//
+// With exposure 0.1, action 1 and confidence 0.95 this yields:
+//   expired → 0.725 high · ≤3d → 0.71 high · ≤7d → 0.62 medium ·
+//   ≤30d → 0.485 medium · ≤90d → 0.395 low · >90d → 0.35 low
+// ---------------------------------------------------------------------------
+
+export type EnsExpiryStage =
+  | "expired"
+  | "imminent"
+  | "week"
+  | "month"
+  | "quarter"
+  | "later";
+
+export function ensExpiryStage(expiresAt: number, now: number): EnsExpiryStage {
+  const remaining = expiresAt - now;
+  if (remaining <= 0) return "expired";
+  if (remaining <= 3 * DAY) return "imminent";
+  if (remaining <= 7 * DAY) return "week";
+  if (remaining <= 30 * DAY) return "month";
+  if (remaining <= 90 * DAY) return "quarter";
+  return "later";
+}
+
+export const ENS_STAGE_FACTORS: Record<
+  EnsExpiryStage,
+  { urgency: number; securityImpact: number }
+> = {
+  expired: { urgency: 1, securityImpact: 0.7 },
+  imminent: { urgency: 1, securityImpact: 0.6 },
+  week: { urgency: 0.8, securityImpact: 0.4 },
+  month: { urgency: 0.4, securityImpact: 0.3 },
+  quarter: { urgency: 0.15, securityImpact: 0.2 },
+  later: { urgency: 0.05, securityImpact: 0.1 },
+};
+
+export function ensExpiryFactors(
+  expiresAt: number,
+  now: number,
+  sourceConfidence: number,
+): PriorityFactors {
+  const stage = ensExpiryStage(expiresAt, now);
+  const { urgency, securityImpact } = ENS_STAGE_FACTORS[stage];
+  return {
+    urgency,
+    // A name has no direct balance at stake; renewal cost is small.
+    financialExposure: 0.1,
+    actionRequirement: 1,
+    securityImpact,
+    sourceConfidence,
+  };
+}

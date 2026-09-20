@@ -13,9 +13,12 @@ export function formatDeadline(deadline: number, now: number): string {
   let unit: string;
   if (abs < HOUR) unit = `${Math.round(abs / MINUTE)}m`;
   else if (abs < DAY) unit = `${Math.round(abs / HOUR)}h`;
-  else {
+  else if (abs < 365 * DAY) {
     const days = Math.round(abs / DAY);
     unit = `${days} day${days === 1 ? "" : "s"}`;
+  } else {
+    const years = Math.round((abs / (365 * DAY)) * 10) / 10;
+    unit = `${years} year${years === 1 ? "" : "s"}`;
   }
   return past ? `${unit} overdue` : `in ${unit}`;
 }

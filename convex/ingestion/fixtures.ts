@@ -15,7 +15,7 @@
  */
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import type { RawEventInput, RawEventPayload } from "../intelligence/normalize";
+import type { RawEventInput, RawEventPayload } from "../../lib/events/raw";
 import { requireUser } from "../lib/identity";
 import { requireOwnedWallet } from "../lib/access";
 import { ingestRawEvents, type IngestSummary } from "./pipeline";
@@ -47,6 +47,8 @@ export const FIXTURE_SCENARIOS: readonly FixtureScenario[] = [
       chainId: 1,
       name: "numa-demo.eth",
       expiresAt: anchor + 12 * DAY,
+      gracePeriodEndsAt: anchor + 102 * DAY,
+      relationship: "registrant",
       renewUrl: "https://app.ens.domains/numa-demo.eth",
       registrarContract: "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
     }),

@@ -81,7 +81,7 @@ describe("add wallet → seed fixtures → inbox → mutate", () => {
     const inbox = await t.query(api.events.getInbox, {});
     const severities = inbox.attention.map((e) => e.severity);
     expect(severities[0]).toBe("high");
-    expect(severities[severities.length - 1]).toBe("low");
+    expect(severities.slice(1).every((s) => s === "medium")).toBe(true);
     const ranks = { critical: 4, high: 3, medium: 2, low: 1, info: 0 } as const;
     for (let i = 1; i < inbox.attention.length; i++) {
       const prev = inbox.attention[i - 1];

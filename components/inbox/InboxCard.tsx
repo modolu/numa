@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { CategoryBadge, DemoBadge, SeverityBadge } from "@/components/ui/Badge";
+import { CategoryBadge, DemoBadge, LiveBadge, SeverityBadge } from "@/components/ui/Badge";
 import { formatDeadline } from "@/lib/formatting/time";
 import { EventActions } from "./EventActions";
 
@@ -38,7 +38,7 @@ export function InboxCard({
           <CategoryBadge category={event.category} />
         </div>
         <div className="flex items-center gap-2">
-          {event.isDemo && <DemoBadge />}
+          {event.isDemo ? <DemoBadge /> : <LiveBadge />}
           {unread && (
             <span
               className="h-2 w-2 rounded-full bg-accent"

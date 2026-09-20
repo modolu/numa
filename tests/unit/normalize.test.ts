@@ -56,12 +56,15 @@ describe("normalization", () => {
     expect(event.eventType).toBe("ens_expiry");
     expect(event.category).toBe("deadline");
     expect(event.requiresAction).toBe(true);
-    expect(event.recommendedAction).toBe("Renew domain");
+    expect(event.title).toBe("numa-demo.eth expires soon");
+    expect(event.recommendedAction).toBe("Review and renew the registration");
     expect(event.deadline).toBe(anchorTime(NOW) + 12 * 24 * HOUR);
     expect(event.source.type).toBe("onchain");
     expect(event.isDemo).toBe(true);
     expect(event.dedupeKey).toBe(`user_1|${WALLET}|ens_expiry|ens|numa-demo.eth`);
-    expect(scorePriority(event.priorityFactors).severity).toBe("low");
+    // 12 days out is the "month" stage → medium per the documented mapping.
+    expect(event.metadata.expiryStage).toBe("month");
+    expect(scorePriority(event.priorityFactors).severity).toBe("medium");
   });
 
   test("Aave health factor → high-severity warning keyed by risk bucket", () => {

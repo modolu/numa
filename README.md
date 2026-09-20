@@ -32,8 +32,17 @@ npm run dev           # Next.js on http://localhost:3000
 Keep `npx convex dev` running in a second terminal while developing so backend
 changes push and types regenerate.
 
-Then open the app, paste an EVM wallet address, and click **Load demo events**
-to run the deterministic fixtures through the real ingestion pipeline.
+Then open the app, paste an EVM wallet address, and either click **Refresh
+wallet** to read live onchain sources or **Load demo events** to run the
+deterministic fixtures through the same ingestion pipeline.
+
+## Live sources
+- **ENS expiry** (`lib/onchain/ens.ts`): the wallet's primary `.eth` name is
+  resolved through the official ENS contracts over standard Ethereum JSON-RPC
+  (viem). No API key is required; set `ONCHAIN_PROVIDER_URL` as a Convex
+  deployment env var to use your own RPC endpoint. Read-only: Numa never
+  signs, renews or submits anything. Wallets are rescanned every 6 hours
+  (`convex/crons.ts`) and on demand from the UI.
 
 ## Checks
 
@@ -51,7 +60,7 @@ npm run check         # lint + typecheck + test
 app/          Next.js routes: /, /inbox, /event/[id], /tasks, /brief, /wallets, /settings
 components/   UI (inbox, event, wallet, tasks, settings, layout, ui)
 convex/       Backend: schema, functions, ingestion pipeline, intelligence, lib
-lib/          Shared vocabulary, validation and formatting used by both sides
+lib/          Shared vocabulary, raw-event contract, onchain adapters, formatting
 tests/        Vitest suites (tests/unit, tests/convex)
 ```
 

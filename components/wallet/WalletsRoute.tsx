@@ -5,8 +5,9 @@ import { api } from "@/convex/_generated/api";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LoadingState } from "@/components/ui/States";
 import { useNow } from "@/components/ui/useNow";
-import { formatRelative } from "@/lib/formatting/time";
 import { WalletOnboarding } from "./WalletOnboarding";
+import { RefreshWalletButton } from "./RefreshWalletButton";
+import { ScanHealth } from "./ScanHealth";
 
 function WalletsScreen() {
   const wallets = useQuery(api.wallets.getWallets);
@@ -40,11 +41,10 @@ function WalletsScreen() {
                   {wallet.address}
                 </p>
               </div>
-              <p className="shrink-0 text-[12px] text-ink-muted">
-                {wallet.lastScannedAt !== undefined && now !== null
-                  ? `Scanned ${formatRelative(wallet.lastScannedAt, now)}`
-                  : "Not scanned yet"}
-              </p>
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <RefreshWalletButton wallet={wallet} />
+                <ScanHealth wallet={wallet} now={now} />
+              </div>
             </li>
           ))}
         </ul>
