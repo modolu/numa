@@ -8,11 +8,11 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** not deployed
 - **Components:** none
-- **Convex features:** schema, tables, indexes, queries, mutations, actions, internal functions, scheduled functions, crons, realtime queries
+- **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, realtime queries
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-20T05:26:39Z
+- **Last updated:** 2026-09-20T07:55:20Z
 
 ## Log
 
@@ -64,6 +64,28 @@ browser sessions; 87 tests, lint, typecheck and production build green.
 Convex features: actions, internal functions, scheduled functions, crons
 (`lib/onchain/ens.ts`, `convex/ingestion/wallet.ts`,
 `convex/jobs/scanWallets.ts`, `convex/crons.ts`).
+
+### 2026-09-20 - e89b2a2
+First real offchain source. Numa now watches six official Aave, Arbitrum and
+ENS pages (governance forums, blogs, docs) through Firecrawl single-page
+scrapes, normalizes the markdown, hashes it with SHA-256 and keeps its own
+per-source hash: the first crawl records a baseline, an unchanged page only
+refreshes crawl health, and a changed page stores a bounded snapshot plus an
+auditable `rawEvents` row keyed by source and content hash. A change reaches
+an inbox only for wallets subscribed to that protocol; subscriptions are
+derived from the wallet's own events and marked live (onchain evidence) or
+demo (fixtures) so fixture exposure is never presented as wallet analysis.
+The resulting `protocol_update` card is deliberately neutral (info severity,
+no action required, "not yet interpreted") — no OpenAI yet. Crawls run on a
+15-minute cron with per-source policies, plus a "Refresh monitored sources"
+control and a source-health panel. Live verification: all six sources
+scraped successfully with the deployment's Firecrawl key, repeat scrapes
+reported unchanged with no duplicate records; no official page changed
+during development, so the changed-content path is covered by the 34 new
+mocked tests (121 total). Convex features: Node actions, scheduled
+functions, crons, internal functions (`lib/web/firecrawl.ts`,
+`convex/ingestion/firecrawl.ts`, `convex/sources.ts`,
+`convex/subscriptions.ts`, `convex/jobs/crawlSources.ts`).
 
 ## Project notes
 
