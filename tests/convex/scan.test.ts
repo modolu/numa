@@ -133,6 +133,22 @@ describe("wallet scan → rawEvent → canonical ens_expiry → inbox", () => {
     expect(detail?.task?.title).toBe("Review and renew the registration");
   });
 
+  test("a live event with a far-future deadline still ingests (reminders wait for the horizon)", async () => {
+    process.env.NUMA_DEV_RECIPIENT_EMAIL = "dev@example.com";
+    try {
+      const { t, walletId } = await setup();
+      succeedWith(ensRaw(Date.now() + 22 * 365 * DAY)); // e.g. vitalik.eth in 2048
+      const result = await t.action(api.ingestion.wallet.scanWallet, { walletId });
+      expect(result.status).toBe("ok");
+      expect((await t.query(api.events.getInbox, {})).attention).toHaveLength(1);
+      const wallet = (await t.query(api.wallets.getWallets, {}))[0];
+      expect(wallet.lastScanStatus).toBe("ok");
+      expect(await t.run(async (ctx) => ctx.db.query("notifications").take(10))).toHaveLength(0);
+    } finally {
+      delete process.env.NUMA_DEV_RECIPIENT_EMAIL;
+    }
+  });
+
   test("re-scanning the same state is a no-op and never duplicates", async () => {
     const { t, walletId } = await setup();
     const expiresAt = Date.now() + 12 * DAY;

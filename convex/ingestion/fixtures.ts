@@ -164,7 +164,7 @@ export const resetDemoData = mutation({
   handler: async (ctx) => {
     const user = await requireUser(ctx);
     let removed = 0;
-    for (const table of ["tasks", "events", "interpretations"] as const) {
+    for (const table of ["tasks", "events", "interpretations", "notifications", "briefs"] as const) {
       const rows = await ctx.db
         .query(table)
         .withIndex("by_user", (q) => q.eq("userId", user._id))

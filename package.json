@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@mendable/firecrawl-js": "^4.41.0",
+    "agentmail": "^0.5.27",
     "convex": "^1.46.0",
     "next": "16.3.5",
     "openai": "^7.20.0",

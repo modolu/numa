@@ -13,6 +13,7 @@ import type { ExposureContext } from "../lib/ai/provider";
 import { INTERPRETATION_VERSION } from "../lib/ai/input";
 import { eventCategoryValidator, eventSeverityValidator, eventTypeValidator } from "./lib/validators";
 import { syncTaskForEvent } from "./tasks";
+import { onEventChanged } from "./notifications";
 
 const RUNNING_STALE_MS = 3 * 60_000;
 export const MAX_INTERPRETATION_ATTEMPTS = 3;
@@ -240,6 +241,8 @@ async function applyInterpretationToEvent(
     metadata: { ...event.metadata, interpreted: true, interpretation },
   });
   await syncTaskForEvent(ctx, event._id, meta.interpretedAt);
+  const upgraded = await ctx.db.get("events", event._id);
+  if (upgraded) await onEventChanged(ctx, upgraded, meta.interpretedAt);
 }
 
 export const recordSuccess = internalMutation({

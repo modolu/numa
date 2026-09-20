@@ -8,6 +8,8 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { InlineError } from "@/components/ui/States";
 import { errorMessage } from "@/components/ui/errors";
 import { MonitoredSources } from "@/components/sources/MonitoredSources";
+import { EmailSettings } from "@/components/notifications/EmailSettings";
+import { NotificationHistory } from "@/components/notifications/NotificationHistory";
 
 function SettingsScreen() {
   const me = useQuery(api.users.me);
@@ -38,7 +40,7 @@ function SettingsScreen() {
       <header className="mb-8">
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Settings</h1>
         <p className="mt-2 text-[15px] text-ink-secondary">
-          Notification and digest preferences arrive with the brief milestone.
+          Email delivery, monitored sources and demo controls.
         </p>
       </header>
 
@@ -54,6 +56,10 @@ function SettingsScreen() {
                 : `Signed in as ${me.displayName ?? "user"}.`}
         </p>
       </section>
+
+      <EmailSettings />
+
+      <NotificationHistory />
 
       <MonitoredSources />
 

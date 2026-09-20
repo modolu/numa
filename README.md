@@ -36,6 +36,19 @@ Then open the app, paste an EVM wallet address, and either click **Refresh
 wallet** to read live onchain sources or **Load demo events** to run the
 deterministic fixtures through the same ingestion pipeline.
 
+## Email notifications
+- **Daily brief, urgent alerts, deadline reminders** (`lib/notifications/`,
+  `convex/notifications.ts`, `convex/briefs.ts`): briefs are built
+  deterministically from canonical events (top 5 by Numa's priority order),
+  urgent alerts need an actionable event at or above the user's threshold
+  (never below medium), reminders fire 24h and 1h before deadlines. Every
+  attempt is persisted with a dedupe key; AgentMail delivers with an
+  `Idempotency-Key`. Configure on the Convex deployment: `AGENTMAIL_API_KEY`
+  (needs `message_send`), `AGENTMAIL_INBOX_ID` (sending inbox address) and
+  `NUMA_DEV_RECIPIENT_EMAIL` (the single development recipient until real
+  auth). Optional `AGENTMAIL_WEBHOOK_SECRET` enables the delivery-status
+  webhook at `/webhooks/agentmail`; `NUMA_APP_URL` adds an "Open Numa" link.
+
 ## Live sources
 - **Official protocol sources** (`lib/web/`, `convex/sources.ts`): a small
   allow-listed registry of official Aave, Arbitrum and ENS pages is scraped

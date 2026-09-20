@@ -14,6 +14,7 @@ import { requireOwnedEvent } from "./lib/access";
 import { contentHash } from "./lib/hash";
 import { canComplete, canTransition, isValidSnoozeUntil } from "./lib/lifecycle";
 import { sortInbox } from "./lib/inboxOrder";
+import { cancelRemindersForEvent, onEventChanged } from "./notifications";
 
 const INBOX_PAGE = 200;
 
@@ -112,6 +113,8 @@ export async function upsertNormalizedEventHelper(
       detectedAt: now,
       updatedAt: now,
     });
+    const created = await ctx.db.get("events", eventId);
+    if (created) await onEventChanged(ctx, created, now);
     return { eventId, outcome: "created" };
   }
 
@@ -125,6 +128,8 @@ export async function upsertNormalizedEventHelper(
   }
 
   await ctx.db.patch("events", existing._id, { ...content, updatedAt: now });
+  const updated = await ctx.db.get("events", existing._id);
+  if (updated) await onEventChanged(ctx, updated, now);
   return { eventId: existing._id, outcome: "updated" };
 }
 
@@ -384,6 +389,7 @@ export const dismissEvent = mutation({
       status: "cancelled",
       snoozeUntil: undefined,
     });
+    await cancelRemindersForEvent(ctx, event._id);
     return null;
   },
 });
@@ -412,6 +418,7 @@ export const completeEvent = mutation({
       completedAt: now,
       snoozeUntil: undefined,
     });
+    await cancelRemindersForEvent(ctx, event._id);
     return null;
   },
 });

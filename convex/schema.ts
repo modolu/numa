@@ -18,6 +18,10 @@
  *  - userProtocolSubscriptions.origin / evidence — live vs demo exposure.
  *  - interpretations (table) — per source-version/user AI interpretation
  *                             state: status, model, version, validated result.
+ *  - briefs.items / remaining / notificationId — brief snapshot for email.
+ *  - notifications.dedupeKey / attempts / scheduledFor / scheduledFunctionId /
+ *    reminderOffset / notifiedSeverity / isTest — idempotent delivery,
+ *    reminder scheduling and urgent-alert escalation state (§22, §30).
  *  - wallets.lastScanAttemptAt / lastScanStatus / lastScanError — scan health
  *                             so provider failures are visible without
  *                             touching last-known-good event data (§28, §45).
@@ -250,18 +254,38 @@ export default defineSchema({
     .index("by_event", ["eventId"])
     .index("by_user", ["userId"]),
 
+  // Daily briefs (§4.3, §23): a self-contained snapshot of the few canonical
+  // events that mattered, so the email renders the same later.
   briefs: defineTable({
     userId: v.id("users"),
+    /** Local calendar date in the user's timezone, YYYY-MM-DD. */
     period: v.string(),
     generatedAt: v.number(),
     headline: v.string(),
     summary: v.string(),
     eventIds: v.array(v.id("events")),
+    items: v.array(
+      v.object({
+        eventId: v.id("events"),
+        title: v.string(),
+        whyItMatters: v.string(),
+        recommendedAction: v.optional(v.string()),
+        severity: eventSeverityValidator,
+        category: eventCategoryValidator,
+        deadline: v.optional(v.number()),
+        actionUrl: v.optional(v.string()),
+        sourceLabel: v.string(),
+        isDemo: v.boolean(),
+        interpreted: v.boolean(),
+      }),
+    ),
+    remaining: v.number(),
     sentViaEmail: v.boolean(),
-  }).index("by_user_and_period", ["userId", "period"]),
+    notificationId: v.optional(v.id("notifications")),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_period", ["userId", "period"]),
 
-  // Derived from evidence Numa already holds (events for the wallet). This is
-  // the personalization gate for offchain monitoring (§12.2, §15).
   userProtocolSubscriptions: defineTable({
     userId: v.id("users"),
     walletId: v.id("wallets"),
@@ -283,22 +307,62 @@ export default defineSchema({
     userId: v.id("users"),
     emailDigestEnabled: v.boolean(),
     urgentEmailEnabled: v.boolean(),
+    /** "HH:MM" local time. */
     digestTime: v.string(),
+    /** IANA timezone, e.g. "Europe/London". */
     timezone: v.string(),
     minimumEmailSeverity: eventSeverityValidator,
+    updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
+  // Outbound notifications (§22): every attempt is persisted and auditable;
+  // `dedupeKey` is the logical identity so retries and reruns never send
+  // the same message twice.
   notifications: defineTable({
     userId: v.id("users"),
     eventId: v.optional(v.id("events")),
     briefId: v.optional(v.id("briefs")),
-    type: v.string(),
+    type: v.union(
+      v.literal("daily_brief"),
+      v.literal("urgent_event"),
+      v.literal("deadline_reminder"),
+      v.literal("test_brief"),
+    ),
+    /** Masked recipient (a***@domain); the real address is resolved at send time. */
     recipient: v.string(),
-    sentAt: v.optional(v.number()),
-    status: v.string(),
-    providerMessageId: v.optional(v.string()),
+    subject: v.optional(v.string()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("sending"),
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("cancelled"),
+      // Provider lifecycle (webhook-ready; not yet driven by a live webhook).
+      v.literal("delivered"),
+      v.literal("bounced"),
+      v.literal("rejected"),
+      v.literal("complained"),
+    ),
     dedupeKey: v.string(),
+    attempts: v.number(),
+    createdAt: v.number(),
+    lastAttemptAt: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    providerMessageId: v.optional(v.string()),
+    failureKind: v.optional(v.string()),
+    failureReason: v.optional(v.string()),
+    /** Deadline reminders: when to fire, and the scheduled function to cancel. */
+    scheduledFor: v.optional(v.number()),
+    scheduledFunctionId: v.optional(v.id("_scheduled_functions")),
+    /** Reminder offset label, e.g. "24h" / "1h". */
+    reminderOffset: v.optional(v.string()),
+    /** Severity the user was alerted at (urgent dedupe/escalation). */
+    notifiedSeverity: v.optional(eventSeverityValidator),
+    isTest: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
-    .index("by_dedupe_key", ["dedupeKey"]),
+    .index("by_user_and_status", ["userId", "status"])
+    .index("by_dedupe_key", ["dedupeKey"])
+    .index("by_event", ["eventId"])
+    .index("by_provider_message_id", ["providerMessageId"]),
 });

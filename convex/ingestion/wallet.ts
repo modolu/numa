@@ -215,11 +215,24 @@ export async function performScan(
     }
   }
 
-  const { summary, rejected } = await ctx.runMutation(
-    internal.ingestion.wallet.ingestScanResults,
-    { walletId: wallet._id, rawEvents, now: Date.now() },
-  );
-  return { status: "ok", walletId: wallet._id, providers, skipped, summary, rejected };
+  // Persisting is Numa's own code, but a failure here must still leave the
+  // wallet in a visible failed state rather than stuck "running".
+  try {
+    const { summary, rejected } = await ctx.runMutation(
+      internal.ingestion.wallet.ingestScanResults,
+      { walletId: wallet._id, rawEvents, now: Date.now() },
+    );
+    return { status: "ok", walletId: wallet._id, providers, skipped, summary, rejected };
+  } catch (error) {
+    const message = `ingest: ${toProviderError(error, "numa").message}`;
+    console.error("wallet scan persist failed", wallet._id, message);
+    await ctx.runMutation(internal.ingestion.wallet.recordScanFailure, {
+      walletId: wallet._id,
+      error: message,
+      now: Date.now(),
+    });
+    return { status: "failed", walletId: wallet._id, providers, error: message, kind: "malformed", retryable: false };
+  }
 }
 
 /** User-triggered scan ("Refresh wallet"). Ownership is verified first. */

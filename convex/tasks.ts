@@ -11,6 +11,7 @@ import { getCurrentUser, requireUser } from "./lib/identity";
 import { requireOwnedTask } from "./lib/access";
 import { canTransition } from "./lib/lifecycle";
 import { sortInbox } from "./lib/inboxOrder";
+import { cancelRemindersForEvent } from "./notifications";
 
 const TASK_PAGE = 100;
 
@@ -161,6 +162,7 @@ export const completeTask = mutation({
         snoozeUntil: undefined,
         updatedAt: now,
       });
+      await cancelRemindersForEvent(ctx, event._id);
     }
     return null;
   },
