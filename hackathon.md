@@ -10,9 +10,9 @@
 - **Components:** none
 - **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, realtime queries
 - **Auth:** none
-- **AI models:** none
+- **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs)
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-20T07:55:20Z
+- **Last updated:** 2026-09-20T09:48:11Z
 
 ## Log
 
@@ -86,6 +86,26 @@ mocked tests (121 total). Convex features: Node actions, scheduled
 functions, crons, internal functions (`lib/web/firecrawl.ts`,
 `convex/ingestion/firecrawl.ts`, `convex/sources.ts`,
 `convex/subscriptions.ts`, `convex/jobs/crawlSources.ts`).
+
+### 2026-09-20 - 4b3c19d
+Semantic interpretation for changed official sources. When a monitored page
+changes for a subscribed wallet, Numa now sends only a bounded excerpt plus
+structured exposure facts (live vs demo, known deterministic facts) to
+OpenAI through the Responses API with a strict JSON schema, no tools and no
+storage, then re-validates locally: every claim must be quoted verbatim from
+the source, wallet claims like "funds at risk" are rejected outright, URLs
+and markup are stripped, deadlines need an explicit quoted date with an
+offset, and the final severity comes from the deterministic priority engine
+capped at low unless a source deadline corroborates it. The generic card is
+upgraded in place with read/snooze state preserved and can never be
+downgraded by a re-crawl; if the model fails, refuses, or is rejected, the
+uninterpreted card stays. Model availability was probed live (gpt-5-mini),
+and the production path hit a real billing 429 from the API, which verified
+the fallback and bounded retries; the success path is covered by 36 new
+mocked and adversarial tests (157 total) until the account has credits.
+Convex features: Node actions, scheduled functions, internal functions
+(`lib/ai/validation.ts`, `lib/ai/openai.ts`, `convex/ingestion/interpret.ts`,
+`convex/interpretations.ts`).
 
 ## Project notes
 
