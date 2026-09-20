@@ -45,6 +45,8 @@ export const EVENT_TYPES = [
   "reward_deadline",
   // Generic "an official monitored source changed" (offchain, deterministic).
   "protocol_update",
+  // Interpreted official-source security notice (no wallet-specific claim).
+  "security_notice",
 ] as const;
 
 /** Provenance families (§10 `source.type`). */

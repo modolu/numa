@@ -11,7 +11,9 @@ export type ProviderErrorKind =
   /** Bad request, auth, unsupported input, permanent 4xx — do not retry blindly. */
   | "permanent"
   /** The provider answered but the data did not match the expected shape. */
-  | "malformed";
+  | "malformed"
+  /** A model declined to answer; retrying the same input is pointless. */
+  | "refusal";
 
 export class ProviderError extends Error {
   constructor(

@@ -118,6 +118,11 @@ export async function upsertNormalizedEventHelper(
   if (fingerprint(existingContentFields(existing)) === fingerprint(content)) {
     return { eventId: existing._id, outcome: "unchanged" };
   }
+  // An interpreted event is never overwritten by a generic re-observation of
+  // the same logical event (e.g. a crawl retry): the richer copy wins.
+  if (existing.metadata.interpreted === true && event.metadata.interpreted === false) {
+    return { eventId: existing._id, outcome: "unchanged" };
+  }
 
   await ctx.db.patch("events", existing._id, { ...content, updatedAt: now });
   return { eventId: existing._id, outcome: "updated" };
@@ -220,9 +225,26 @@ export const getEvent = query({
         ? ctx.db.normalizeId("protocolSources", event.metadata.sourceId)
         : null;
     const monitoredSource = sourceId ? await ctx.db.get("protocolSources", sourceId) : null;
+    const interpretationRow = monitoredSource
+      ? await ctx.db
+          .query("interpretations")
+          .withIndex("by_event", (q) => q.eq("eventId", event._id))
+          .unique()
+      : null;
 
     return {
       event,
+      interpretation: interpretationRow
+        ? {
+            status: interpretationRow.status,
+            attempts: interpretationRow.attempts,
+            model: interpretationRow.model,
+            version: interpretationRow.version,
+            interpretedAt: interpretationRow.interpretedAt,
+            errorKind: interpretationRow.errorKind,
+            result: interpretationRow.result ?? null,
+          }
+        : null,
       source: monitoredSource
         ? {
             _id: monitoredSource._id,

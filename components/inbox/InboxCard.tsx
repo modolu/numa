@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { CategoryBadge, DemoBadge, LiveBadge, SeverityBadge } from "@/components/ui/Badge";
+import { AiBadge, CategoryBadge, DemoBadge, LiveBadge, SeverityBadge } from "@/components/ui/Badge";
 import { formatDeadline } from "@/lib/formatting/time";
 import { EventActions } from "./EventActions";
 
@@ -38,6 +38,7 @@ export function InboxCard({
           <CategoryBadge category={event.category} />
         </div>
         <div className="flex items-center gap-2">
+          {event.metadata.interpreted === true && event.metadata.interpretation && (event.metadata.interpretation as { relevant?: boolean }).relevant !== false && <AiBadge />}
           {event.isDemo ? <DemoBadge /> : <LiveBadge />}
           {unread && (
             <span

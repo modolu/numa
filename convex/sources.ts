@@ -19,6 +19,7 @@ import { isCrawlDue, type CrawlPolicy } from "../lib/web/crawlPolicy";
 import { getCurrentUser } from "./lib/identity";
 import { knownProtocol, officialHostsFor, seedProtocolsHelper } from "./protocols";
 import { processRawEventForUser, recordRawEvent } from "./ingestion/pipeline";
+import { ensureInterpretationScheduled } from "./interpretations";
 
 export const FIRECRAWL_SOURCE = "firecrawl";
 /** A crawl still marked running after this long is treated as abandoned. */
@@ -218,7 +219,15 @@ export type CrawlOutcome =
   | {
       changed: true;
       rawEventId: Id<"rawEvents">;
-      fanout: { users: number; promoted: number; created: number; updated: number; unchanged: number; irrelevant: number };
+      fanout: {
+        users: number;
+        promoted: number;
+        created: number;
+        updated: number;
+        unchanged: number;
+        irrelevant: number;
+        interpretationsScheduled: number;
+      };
     };
 
 /**
@@ -304,7 +313,7 @@ export const recordCrawlResult = internalMutation({
       if (!current || (current.origin === "demo" && sub.origin === "live")) byUser.set(sub.userId, sub);
     }
 
-    const fanout = { users: byUser.size, promoted: 0, created: 0, updated: 0, unchanged: 0, irrelevant: 0 };
+    const fanout = { users: byUser.size, promoted: 0, created: 0, updated: 0, unchanged: 0, irrelevant: 0, interpretationsScheduled: 0 };
     for (const sub of byUser.values()) {
       const [user, wallet] = await Promise.all([
         ctx.db.get("users", sub.userId),
@@ -324,6 +333,17 @@ export const recordCrawlResult = internalMutation({
       if (outcome.kind === "promoted") {
         fanout.promoted += 1;
         fanout[outcome.outcome] += 1;
+        // Semantic interpretation runs asynchronously; the generic card is
+        // already in the inbox and stays as the fallback (§16).
+        const scheduled = await ensureInterpretationScheduled(ctx, {
+          sourceId: source._id,
+          contentHash: args.contentHash,
+          userId: user._id,
+          walletId: wallet._id,
+          eventId: outcome.eventId,
+          now: args.now,
+        });
+        if (scheduled.scheduled) fanout.interpretationsScheduled += 1;
       } else if (outcome.kind === "irrelevant") {
         fanout.irrelevant += 1;
       }
@@ -357,5 +377,25 @@ export const requireCallerForRefresh = internalQuery({
     const user = await getCurrentUser(ctx);
     if (!user) throw new ConvexError("Add a wallet before refreshing sources.");
     return { userId: user._id };
+  },
+});
+
+/**
+ * DEVELOPMENT ONLY (internal, CLI/dashboard): make the next crawl of a source
+ * register as changed even if the page did not change, by replacing the
+ * stored hash with a clearly labelled marker. Used to exercise the
+ * change → interpretation path against real official content without
+ * pretending a protocol incident happened.
+ */
+export const devForceRecrawl = internalMutation({
+  args: { sourceId: v.id("protocolSources") },
+  handler: async (ctx, args) => {
+    const source = await ctx.db.get("protocolSources", args.sourceId);
+    if (!source || !source.contentHash) throw new Error("Source has no baseline yet");
+    await ctx.db.patch("protocolSources", source._id, {
+      contentHash: `dev-forced-rebaseline-${Date.now()}`,
+      lastCrawlAttemptAt: undefined,
+    });
+    return { previousHash: source.contentHash };
   },
 });

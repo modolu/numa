@@ -88,6 +88,7 @@ const SECURITY_IMPACT: Record<EventType, number> = {
   governance_deadline: 0.1,
   reward_deadline: 0.1,
   protocol_update: 0,
+  security_notice: 0.6,
 };
 
 const RISK_BUCKET_URGENCY: Record<RiskBucket, number> = {

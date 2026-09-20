@@ -16,6 +16,8 @@
  *  - protocolSources.previous/latest content fields + crawl health — change
  *                             detection state and provenance (§13, §14).
  *  - userProtocolSubscriptions.origin / evidence — live vs demo exposure.
+ *  - interpretations (table) — per source-version/user AI interpretation
+ *                             state: status, model, version, validated result.
  *  - wallets.lastScanAttemptAt / lastScanStatus / lastScanError — scan health
  *                             so provider failures are visible without
  *                             touching last-known-good event data (§28, §45).
@@ -193,6 +195,60 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_status", ["userId", "status"])
     .index("by_event", ["eventId"]),
+
+  // One row per (source version, user): audit trail and cost control for the
+  // OpenAI interpretation step (§17, §18). Stores validated output only —
+  // never prompts, raw model text or hidden reasoning.
+  interpretations: defineTable({
+    sourceId: v.id("protocolSources"),
+    contentHash: v.string(),
+    userId: v.id("users"),
+    walletId: v.id("wallets"),
+    eventId: v.id("events"),
+    version: v.string(),
+    inputHash: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("ok"),
+      v.literal("rejected"),
+      v.literal("failed"),
+    ),
+    attempts: v.number(),
+    provider: v.optional(v.string()),
+    model: v.optional(v.string()),
+    interpretedAt: v.optional(v.number()),
+    lastAttemptAt: v.optional(v.number()),
+    errorKind: v.optional(v.string()),
+    lastError: v.optional(v.string()),
+    result: v.optional(
+      v.object({
+        relevant: v.boolean(),
+        confidence: v.number(),
+        eventType: eventTypeValidator,
+        category: eventCategoryValidator,
+        headline: v.string(),
+        summary: v.string(),
+        whyItMatters: v.string(),
+        recommendedAction: v.optional(v.string()),
+        requiresAction: v.boolean(),
+        deadline: v.optional(v.number()),
+        deadlineEvidence: v.optional(v.string()),
+        claimedSeverity: eventSeverityValidator,
+        severity: eventSeverityValidator,
+        priorityScore: v.number(),
+        severityCapped: v.boolean(),
+        evidence: v.array(v.string()),
+        unsupportedClaims: v.array(v.string()),
+        relevanceReason: v.string(),
+        notes: v.array(v.string()),
+        exposureOrigin: v.union(v.literal("live"), v.literal("demo")),
+      }),
+    ),
+  })
+    .index("by_source_and_hash_and_user", ["sourceId", "contentHash", "userId"])
+    .index("by_event", ["eventId"])
+    .index("by_user", ["userId"]),
 
   briefs: defineTable({
     userId: v.id("users"),
