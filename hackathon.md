@@ -10,7 +10,7 @@
 - **Components:** @convex-dev/static-hosting
 - **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, HTTP actions, realtime queries, registered component, static hosting
 - **Auth:** none
-- **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs)
+- **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs; production fallback active while API credits are unavailable)
 - **Started:** 2026-09-19T22:57:07Z
 - **Last updated:** 2026-09-21T02:53:21Z
 
@@ -162,22 +162,22 @@ A judge enters a wallet and sees the few onchain actions that matter now, with
 realtime updates, source-grounded explanations, and a personalized email digest.
 
 ### Sponsor roles
-- **Convex:** realtime application state and workflows.
+- **Convex:** realtime application state, workflows, scheduling, and static hosting.
 - **Firecrawl:** official protocol-source monitoring and change detection.
-- **OpenAI:** relevance/explanation/brief generation over structured verified context.
-- **AgentMail:** digest, urgent alerts, and deadline reminders.
+- **OpenAI:** structured relevance and explanation of changed official protocol sources, with deterministic validation and graceful fallback.
+- **AgentMail:** daily briefs, urgent alerts, and deadline reminders.
 
 ### Demo sequence
-1. Enter wallet.
-2. Numa discovers relevant context.
-3. Prioritized inbox appears.
-4. Open an Aave-style risk event.
-5. Firecrawl detects an official protocol update.
-6. Relevance logic matches it to wallet exposure.
-7. OpenAI explains the change.
-8. Convex pushes the new item into the open inbox.
-9. User snoozes/completes items.
-10. AgentMail sends the Numa brief.
+1. Open Numa and load the demo wallet.
+2. Numa surfaces prioritized onchain actions.
+3. Open an Aave-style risk event and inspect what happened, why it matters, and the recommended next step.
+4. Show the live ENS event discovered from Ethereum.
+5. Show Firecrawl monitoring official protocol sources and Numa's change-detection pipeline.
+6. Explain that relevant changes pass through the structured OpenAI interpretation layer when inference is available, with a deterministic fallback when it is not.
+7. Convex pushes new and updated items into the inbox in realtime.
+8. Snooze or complete an item.
+9. Open the personalized Numa brief.
+10. Show AgentMail delivery and notification history.
 
 ### Guardrail
 No transaction signing or autonomous execution in the hackathon MVP.
