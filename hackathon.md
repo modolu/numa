@@ -3,16 +3,16 @@
 - **Project:** Numa
 - **Event:** Convex All Gas Hackathon
 - **What it does:** Turns fragmented wallet activity, protocol updates, governance deadlines, claims, approvals, renewals, and risk events into a prioritized inbox of onchain actions.
-- **Live app:** not deployed
+- **Live app:** https://proper-egret-956.convex.site
 - **Repo:** none
 - **Frontend:** Convex static hosting
-- **Convex deployment:** not deployed
-- **Components:** none
-- **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, HTTP actions, realtime queries
+- **Convex deployment:** https://proper-egret-956.convex.cloud
+- **Components:** @convex-dev/static-hosting
+- **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, HTTP actions, realtime queries, registered component, static hosting
 - **Auth:** none
 - **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs)
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-20T16:21:30Z
+- **Last updated:** 2026-09-21T02:53:21Z
 
 ## Log
 
@@ -129,6 +129,28 @@ browser walkthroughs green. Convex features: HTTP actions, scheduled
 functions, crons, Node actions (`convex/notifications.ts`,
 `convex/briefs.ts`, `convex/ingestion/mail.ts`, `convex/http.ts`,
 `lib/notifications/`).
+
+### 2026-09-21 - cf84009
+Numa is public at https://proper-egret-956.convex.site, served by the
+official Convex static-hosting component from the production deployment
+(`convex/convex.config.ts` registers the component; `convex/http.ts` maps
+Numa's page URLs to the Next.js static export and keeps the AgentMail
+webhook at `/webhooks/agentmail`). The event detail route became
+`/event?id=…` so the export needs no pre-generated paths. Production was
+verified end to end: six official sources baselined through Firecrawl, a
+live ENS read for the demo wallet, demo fixtures seeded and labelled, an
+urgent alert and a labelled test brief delivered by AgentMail, and a
+judge-style walkthrough in fresh desktop and mobile browsers covering
+onboarding validation, realtime propagation between visitors, all lifecycle
+actions, detail pages on hard reload, brief, settings and history; the built
+bundle exposes only the public Convex URL and unsigned webhook calls are
+refused. Quota-exhausted OpenAI errors are now non-retryable so the
+uninterpreted fallback card stands without wasted attempts; OpenAI
+remains unconfigured in production until the account has credits. Webhook
+registration with AgentMail is pending a key with `webhook_create`.
+189 tests. Convex features: registered component, static hosting, HTTP
+actions (`convex/convex.config.ts`, `convex/http.ts`, `convex/staticSite.ts`,
+`next.config.ts`).
 
 ## Project notes
 
