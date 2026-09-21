@@ -152,7 +152,7 @@ registration with AgentMail is pending a key with `webhook_create`.
 actions (`convex/convex.config.ts`, `convex/http.ts`, `convex/staticSite.ts`,
 `next.config.ts`).
 
-### 2026-09-21 - 8c1f1c1
+### 2026-09-21 - ebee978
 Live OpenAI interpretation verified in production. With `OPENAI_API_KEY`
 now set on the production deployment (no `OPENAI_MODEL` override, so the
 code default `gpt-5-mini` applied; a read-only model probe confirmed it is
