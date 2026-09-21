@@ -10,9 +10,9 @@
 - **Components:** @convex-dev/static-hosting
 - **Convex features:** schema, tables, indexes, queries, mutations, actions, Node actions, internal functions, scheduled functions, crons, HTTP actions, realtime queries, registered component, static hosting
 - **Auth:** none
-- **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs; production fallback active while API credits are unavailable)
+- **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs; production interpretation path verified live on 2026-09-21)
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-21T03:07:51Z
+- **Last updated:** 2026-09-21T22:01:22Z
 
 ## Log
 
@@ -152,6 +152,35 @@ registration with AgentMail is pending a key with `webhook_create`.
 actions (`convex/convex.config.ts`, `convex/http.ts`, `convex/staticSite.ts`,
 `next.config.ts`).
 
+### 2026-09-21 - 8c1f1c1
+Live OpenAI interpretation verified in production. With `OPENAI_API_KEY`
+now set on the production deployment (no `OPENAI_MODEL` override, so the
+code default `gpt-5-mini` applied; a read-only model probe confirmed it is
+available to the account), a controlled test exercised the existing path
+end to end: the labelled dev rebaseline `sources:devForceRecrawl` on the
+ENS docs source followed by one real Firecrawl crawl. The ENS documentation
+page itself had not changed (the crawl returned the identical content
+hash); the rebaseline only made the pipeline treat it as a change so that
+one `protocol_update` card and one interpretation row were created for the
+demo wallet. The scheduled `ingestion/interpret:run` made exactly one
+Responses API call and completed on its first attempt in about 11 seconds
+with no retry and no fallback: the strict Structured Output parsed, local
+grounding and validation passed with no notes (all evidence quotes were
+verbatim from the excerpt, no deadline was claimed, text limits applied),
+and the deterministic priority engine remained authoritative, turning the
+model's claimed `info` severity into score 0.19 / `info` without needing
+the uncorroborated cap. The model judged the docs excerpt irrelevant to the
+wallet's known ENS expiry (`relevant: false`), so the generic card was
+correctly not upgraded, its `actionUrl` stayed the trusted source URL, no
+notification was queued and the six pre-existing inbox items were
+untouched. The three verification rows (event, interpretation, raw event)
+were then removed from production so the public judge inbox contains no
+synthetic protocol-change claim; the source keeps its real content hash.
+189 tests, lint and typecheck green; no code changes. Convex features:
+Node actions, scheduled functions, internal functions
+(`convex/ingestion/interpret.ts`, `convex/interpretations.ts`,
+`convex/sources.ts`).
+
 ## Project notes
 
 ### One-line pitch
@@ -173,7 +202,7 @@ realtime updates, source-grounded explanations, and a personalized email digest.
 3. Open an Aave-style risk event and inspect what happened, why it matters, and the recommended next step.
 4. Show the live ENS event discovered from Ethereum.
 5. Show Firecrawl monitoring official protocol sources and Numa's change-detection pipeline.
-6. Explain that relevant changes pass through the structured OpenAI interpretation layer when inference is available, with a deterministic fallback when it is not.
+6. Explain that relevant changes pass through the structured OpenAI interpretation layer (verified live in production), with a deterministic fallback when inference is unavailable or its output fails validation.
 7. Convex pushes new and updated items into the inbox in realtime.
 8. Snooze or complete an item.
 9. Open the personalized Numa brief.

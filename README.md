@@ -72,6 +72,7 @@ to allow-listed official pages.
 - ENS discovery covers the wallet's primary `.eth` name; Aave, governance and
   bridge items are deterministic fixtures.
 - OpenAI interpretation falls back to the generic "source updated" card when
-  the API is unavailable (currently: the account has no credits).
+  the API is unavailable or the model output fails local validation. The
+  production interpretation path has been verified live (2026-09-21).
 - Delivery-status webhook is prepared and verified with signed test payloads;
   live registration depends on the provider account's permissions.
