@@ -4,7 +4,7 @@
 - **Event:** Convex All Gas Hackathon
 - **What it does:** Turns fragmented wallet activity, protocol updates, governance deadlines, claims, approvals, renewals, and risk events into a prioritized inbox of onchain actions.
 - **Live app:** https://proper-egret-956.convex.site
-- **Repo:** none
+- **Repo:** https://github.com/modolu/numa
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://proper-egret-956.convex.cloud
 - **Components:** @convex-dev/static-hosting
@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** gpt-5-mini (OpenAI Responses API, strict Structured Outputs; production fallback active while API credits are unavailable)
 - **Started:** 2026-09-19T22:57:07Z
-- **Last updated:** 2026-09-21T02:53:21Z
+- **Last updated:** 2026-09-21T03:07:51Z
 
 ## Log
 
