@@ -65,11 +65,18 @@ function extractStatus(error: unknown): number | undefined {
   return typeof status === "number" ? status : undefined;
 }
 
+/** A 429 that is really a billing/quota state, not a momentary rate limit. */
+const QUOTA_EXHAUSTED = /\b(no credits?|insufficient[_ ]quota|quota|billing|credits? remaining|exceeded your current)\b/i;
+
 /** Map an unknown thrown value to a ProviderError without leaking internals. */
 export function toProviderError(error: unknown, source: string): ProviderError {
   if (isProviderError(error)) return error;
   const message = sanitizeProviderMessage(error);
   const status = extractStatus(error);
+  if (status === 429 && QUOTA_EXHAUSTED.test(message)) {
+    // Retrying an exhausted account only burns attempts; surface it and stop.
+    return new ProviderError(message, "permanent", source, status);
+  }
   if (status !== undefined && status >= 400 && status < 500 && status !== 429) {
     return new ProviderError(message, "permanent", source, status);
   }

@@ -1,5 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
+import { eventHref } from "@/components/event/EventRoute";
+
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -137,9 +141,9 @@ export function InboxScreen({ wallets }: { wallets: Doc<"wallets">[] }) {
                 key={event._id}
                 className="flex items-center justify-between gap-3 px-4 py-3 text-[14px]"
               >
-                <a href={`/event/${event._id}`} className="truncate text-ink-secondary line-through decoration-line-strong hover:text-ink">
+                <Link href={eventHref(event._id)} className="truncate text-ink-secondary line-through decoration-line-strong hover:text-ink">
                   {event.title}
-                </a>
+                </Link>
                 <span className="shrink-0 text-[12px] uppercase tracking-wide text-ink-muted">
                   {event.status}
                 </span>

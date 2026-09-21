@@ -1,5 +1,7 @@
 "use client";
 
+import { eventHref } from "@/components/event/EventRoute";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
@@ -144,7 +146,7 @@ function BriefScreen() {
                         {item.interpreted && <AiBadge />}
                       </div>
                       <p className="mt-2 text-[16px] font-medium">
-                        {i + 1}. <Link href={`/event/${item.eventId}`} className="hover:underline">{item.title}</Link>
+                        {i + 1}. <Link href={eventHref(item.eventId)} className="hover:underline">{item.title}</Link>
                       </p>
                       <p className="mt-1 text-[14px] leading-6 text-ink-secondary">{item.whyItMatters}</p>
                       <p className="mt-1 text-[13px]">

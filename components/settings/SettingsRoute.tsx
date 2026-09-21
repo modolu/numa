@@ -19,7 +19,7 @@ function SettingsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function onReset() {
-    if (!window.confirm("Remove all inbox items, tasks and raw observations for this account?")) {
+    if (!window.confirm("Remove all inbox items, tasks, notifications and raw observations for the shared demo workspace? Every visitor will see the empty state until demo events are loaded again.")) {
       return;
     }
     setBusy(true);
@@ -52,7 +52,7 @@ function SettingsScreen() {
             : me === null
               ? "No account yet — it is created the first time you add a wallet."
               : me.isDemoIdentity
-                ? "You are using the temporary hackathon demo identity. Real sign-in is deferred to a later milestone; every read and write is still scoped to this account."
+                ? "Shared demo workspace: this deployment uses one hackathon demo identity, so every visitor sees and edits the same demo wallet and inbox. Real sign-in is deferred to a later milestone; ownership checks are already enforced on every read and write."
                 : `Signed in as ${me.displayName ?? "user"}.`}
         </p>
       </section>
@@ -66,8 +66,9 @@ function SettingsScreen() {
       <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
         <h2 className="text-[15px] font-medium">Demo data</h2>
         <p className="mt-2 text-[14px] leading-6 text-ink-secondary">
-          Clear inbox items, tasks and raw observations so the demo seed can be
-          shown from an empty inbox. Wallets are kept.
+          Clear inbox items, tasks, notifications and raw observations so the demo
+          seed can be shown from an empty inbox. Wallets are kept. This affects the
+          shared demo workspace for everyone.
         </p>
         <div className="mt-4 flex items-center gap-4">
           <Button variant="danger" size="sm" disabled={busy} onClick={onReset}>

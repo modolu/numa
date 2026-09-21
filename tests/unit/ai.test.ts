@@ -297,6 +297,11 @@ describe("OpenAI provider mapping", () => {
     await expect(auth.interpret(input())).rejects.toMatchObject({ kind: "permanent", status: 401, message: "Incorrect API key provided: [redacted]" });
     const rate = createOpenAIProvider({ apiKey: "k", createImpl: async () => { throw Object.assign(new Error("Rate limit"), { status: 429 }); } });
     await expect(rate.interpret(input())).rejects.toMatchObject({ kind: "transient" });
+    // Exhausted credits/quota are a billing state: not retried.
+    const broke = createOpenAIProvider({ apiKey: "k", createImpl: async () => { throw Object.assign(new Error("429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/"), { status: 429 }); } });
+    await expect(broke.interpret(input())).rejects.toMatchObject({ kind: "permanent", status: 429, message: /no credits remaining/ });
+    const quota = createOpenAIProvider({ apiKey: "k", createImpl: async () => { throw Object.assign(new Error("You exceeded your current quota"), { status: 429, code: "insufficient_quota" }); } });
+    await expect(quota.interpret(input())).rejects.toMatchObject({ kind: "permanent" });
     const noKey = createOpenAIProvider({ apiKey: undefined });
     await expect(noKey.interpret(input())).rejects.toMatchObject({ kind: "permanent", message: /OPENAI_API_KEY/ });
   });

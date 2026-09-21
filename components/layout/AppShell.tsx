@@ -29,15 +29,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-10 border-b border-line bg-canvas/85 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-5">
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 sm:h-14 sm:flex-nowrap sm:px-5 sm:py-0">
           <Link
             href="/"
-            className="text-[15px] font-semibold tracking-tight text-ink"
+            className="shrink-0 text-[15px] font-semibold tracking-tight text-ink"
             aria-label="Numa home"
           >
             Numa
           </Link>
-          <nav aria-label="Primary" className="flex items-center gap-1">
+          <nav aria-label="Primary" className="order-3 flex w-full items-center gap-1 sm:order-none sm:w-auto">
             {PRIMARY_NAV.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <nav aria-label="Secondary" className="flex items-center gap-1">
+          <nav aria-label="Secondary" className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             {SECONDARY_NAV.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-[13px] transition-colors sm:px-2.5 ${
                     active ? "text-ink" : "text-ink-muted hover:text-ink"
                   }`}
                 >

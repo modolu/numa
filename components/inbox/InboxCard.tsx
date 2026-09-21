@@ -1,5 +1,7 @@
 "use client";
 
+import { eventHref } from "@/components/event/EventRoute";
+
 import Link from "next/link";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { AiBadge, CategoryBadge, DemoBadge, LiveBadge, SeverityBadge } from "@/components/ui/Badge";
@@ -57,7 +59,7 @@ export function InboxCard({
         }`}
       >
         <Link
-          href={`/event/${event._id}`}
+          href={eventHref(event._id)}
           className="rounded-sm hover:underline hover:underline-offset-4"
         >
           {event.title}
@@ -88,11 +90,11 @@ export function InboxCard({
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <EventActions event={event} layout="card" />
         <Link
-          href={`/event/${event._id}`}
-          className="text-[13px] font-medium text-accent hover:underline hover:underline-offset-4"
+          href={eventHref(event._id)}
+          className="ml-auto whitespace-nowrap text-[13px] font-medium text-accent hover:underline hover:underline-offset-4"
         >
           Open →
         </Link>

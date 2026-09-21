@@ -45,6 +45,7 @@ import type * as notifications from "../notifications.js";
 import type * as protocols from "../protocols.js";
 import type * as rawEvents from "../rawEvents.js";
 import type * as sources from "../sources.js";
+import type * as staticSite from "../staticSite.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
@@ -96,6 +97,7 @@ declare const fullApi: ApiFromModules<{
   protocols: typeof protocols;
   rawEvents: typeof rawEvents;
   sources: typeof sources;
+  staticSite: typeof staticSite;
   subscriptions: typeof subscriptions;
   tasks: typeof tasks;
   users: typeof users;
@@ -130,4 +132,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+};

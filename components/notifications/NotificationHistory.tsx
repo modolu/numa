@@ -1,5 +1,7 @@
 "use client";
 
+import { eventHref } from "@/components/event/EventRoute";
+
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -45,7 +47,7 @@ export function NotificationHistory() {
                   {n.isTest ? <span className="ml-2 text-[11px] uppercase tracking-[0.08em] text-ink-muted">test</span> : null}
                 </p>
                 {n.event && (
-                  <Link href={`/event/${n.event._id}`} className="block truncate text-ink-secondary hover:underline">{n.event.title}</Link>
+                  <Link href={eventHref(n.event._id)} className="block truncate text-ink-secondary hover:underline">{n.event.title}</Link>
                 )}
                 {n.brief && <p className="truncate text-ink-secondary">{n.brief.headline} · {n.brief.period}</p>}
                 {n.failureReason && <p className="truncate text-[12px] text-sev-high" title={n.failureReason}>{n.failureReason}</p>}

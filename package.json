@@ -5,15 +5,18 @@
   "scripts": {
     "dev": "next dev",
     "dev:convex": "convex dev",
-    "build": "next build",
+    "build": "NEXT_PUBLIC_CONVEX_URL=${VITE_CONVEX_URL:-$NEXT_PUBLIC_CONVEX_URL} next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm run test"
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "deploy": "npx @convex-dev/static-hosting deploy -d out",
+    "deploy:site": "npx @convex-dev/static-hosting upload --build --prod -d out"
   },
   "dependencies": {
+    "@convex-dev/static-hosting": "^0.2.1",
     "@mendable/firecrawl-js": "^4.41.0",
     "agentmail": "^0.5.27",
     "convex": "^1.46.0",

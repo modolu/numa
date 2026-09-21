@@ -1,98 +1,77 @@
-# Numa
+# Numa — Your onchain inbox
 
-**Your onchain inbox.**
+Numa turns fragmented wallet activity, protocol updates, governance deadlines,
+claims, renewals and risk events into one prioritized inbox of actions.
 
-Numa turns fragmented wallet activity, protocol updates, governance deadlines, claims, approvals, renewals, and risk events into a prioritized inbox of actions.
+**Live demo:** https://proper-egret-956.convex.site (public, no sign-in)
 
-## Source of truth
-- `NUMA_ARCHITECTURE.md` — technical source of truth.
-- `IMPLEMENTATION_PLAN.md` — execution order for the hackathon build.
-- `hackathon.md` — public, evidence-based build log (kept current with `/hackathon`).
+## Problem
+A wallet has state but no inbox. What needs your attention is scattered across
+explorers, protocol dashboards, governance forums, docs and email, and none of
+it is ranked by whether it matters to *you*.
 
-## MVP principles
-- Read-only/advisory. No signing, no custody, no seed phrases.
-- Convex-first backend: persistence, queries, mutations, realtime subscriptions.
-- Realtime inbox.
-- Small set of high-quality event types.
-- Official sources first.
-- Deterministic priority and dedupe.
-- Source-grounded AI explanations (later milestone).
+## Solution
+Numa answers three questions for one monitored wallet — *what happened, why it
+matters to me, what should I do next* — and delivers the few items that matter
+as a realtime inbox, a daily brief and urgent alerts. It is read-only and
+advisory: no signing, no custody, no seed phrases.
 
-## Stack
-Next.js (App Router) · React · TypeScript · Tailwind CSS v4 · Convex · Vitest + convex-test.
+## Architecture
+```text
+onchain adapters (ENS) ─┐
+official sources (Firecrawl) ─┤→ rawEvents → normalize → relevance → priority
+demo fixtures ─┘                → dedupe → canonical events → Convex → inbox
+                                              ↓ (when eligible)     ↓
+                                     OpenAI interpretation     briefs / alerts
+                                     (strict schema, validated)  via AgentMail
+```
+Convex is the whole backend: database, realtime queries, mutations, Node
+actions for providers, scheduler and crons, HTTP actions, and static hosting.
+Priority is a deterministic weighted score; the model may explain, never
+invent. Full detail: `NUMA_ARCHITECTURE.md`; build order: `IMPLEMENTATION_PLAN.md`;
+public build log: `hackathon.md`.
 
-## Run locally
+## Sponsor stack
+- **Convex** — realtime data, workflows, scheduling, HTTP, static hosting.
+- **Firecrawl** — scrapes official protocol pages; Numa hashes and detects changes.
+- **OpenAI** — Responses API with strict Structured Outputs to interpret changed
+  sources, validated locally with a deterministic severity guardrail.
+- **AgentMail** — daily briefs, urgent alerts and deadline reminders with
+  idempotent delivery and a persisted history.
 
+## Demo flow (under three minutes)
+1. Open Numa — the shared demo wallet's inbox is already ranked.
+2. Open the Aave-style risk item: what happened, why it matters, next step.
+3. Wallets → live ENS exposure from a real onchain read; Refresh wallet.
+4. Settings → official protocol sources Numa monitors and their crawl health.
+5. Snooze or complete an item; watch it move in realtime.
+6. Brief → today's deterministic brief and its AgentMail delivery history.
+
+Fixture items are always labelled **DEMO DATA**; live items are labelled **LIVE**.
+
+## Local development
 ```bash
 npm install
-npx convex dev        # provisions/links a dev deployment and writes .env.local
+npx convex dev        # provisions/links a dev deployment, writes .env.local
 npm run dev           # Next.js on http://localhost:3000
 ```
+Checks: `npm run check` (lint, typecheck, tests), `npm run build` (static
+export), `npm run deploy` (backend + static site to production).
 
-Keep `npx convex dev` running in a second terminal while developing so backend
-changes push and types regenerate.
+Provider configuration lives in Convex deployment env vars — see
+`.env.example` for the names. Only `NEXT_PUBLIC_CONVEX_URL` reaches the browser.
 
-Then open the app, paste an EVM wallet address, and either click **Refresh
-wallet** to read live onchain sources or **Load demo events** to run the
-deterministic fixtures through the same ingestion pipeline.
+## Safety / read-only model
+No wallet connection, signing or transactions. Public addresses only. Crawled
+pages are untrusted data: never executed, never followed as instructions, and
+model output is re-validated before it can touch the inbox. Emails link only
+to allow-listed official pages.
 
-## Email notifications
-- **Daily brief, urgent alerts, deadline reminders** (`lib/notifications/`,
-  `convex/notifications.ts`, `convex/briefs.ts`): briefs are built
-  deterministically from canonical events (top 5 by Numa's priority order),
-  urgent alerts need an actionable event at or above the user's threshold
-  (never below medium), reminders fire 24h and 1h before deadlines. Every
-  attempt is persisted with a dedupe key; AgentMail delivers with an
-  `Idempotency-Key`. Configure on the Convex deployment: `AGENTMAIL_API_KEY`
-  (needs `message_send`), `AGENTMAIL_INBOX_ID` (sending inbox address) and
-  `NUMA_DEV_RECIPIENT_EMAIL` (the single development recipient until real
-  auth). Optional `AGENTMAIL_WEBHOOK_SECRET` enables the delivery-status
-  webhook at `/webhooks/agentmail`; `NUMA_APP_URL` adds an "Open Numa" link.
-
-## Live sources
-- **Official protocol sources** (`lib/web/`, `convex/sources.ts`): a small
-  allow-listed registry of official Aave, Arbitrum and ENS pages is scraped
-  with Firecrawl (single-page `scrape`, markdown only), normalized and
-  SHA-256 hashed by Numa. Only a changed hash creates a raw change record,
-  and it reaches an inbox only for wallets with exposure to that protocol
-  (`userProtocolSubscriptions`). Requires `FIRECRAWL_API_KEY` as a Convex
-  deployment env var; without it sources show as unavailable and nothing
-  else breaks. Crawls are scheduled every 15 minutes and run per source
-  policy (governance 30 min, updates 3 h, docs 6 h).
-- **ENS expiry** (`lib/onchain/ens.ts`): the wallet's primary `.eth` name is
-  resolved through the official ENS contracts over standard Ethereum JSON-RPC
-  (viem). No API key is required; set `ONCHAIN_PROVIDER_URL` as a Convex
-  deployment env var to use your own RPC endpoint. Read-only: Numa never
-  signs, renews or submits anything. Wallets are rescanned every 6 hours
-  (`convex/crons.ts`) and on demand from the UI.
-
-## Checks
-
-```bash
-npm run lint
-npm run typecheck     # Next app + Convex functions
-npm test              # unit + convex-test integration suites
-npm run build         # production build
-npm run check         # lint + typecheck + test
-```
-
-## Layout
-
-```text
-app/          Next.js routes: /, /inbox, /event/[id], /tasks, /brief, /wallets, /settings
-components/   UI (inbox, event, wallet, tasks, settings, layout, ui)
-convex/       Backend: schema, functions, ingestion pipeline, intelligence, lib
-lib/          Shared vocabulary, raw-event contract, onchain adapters, formatting
-tests/        Vitest suites (tests/unit, tests/convex)
-```
-
-## Identity (temporary)
-Real authentication is deferred to a later milestone. `convex/lib/identity.ts`
-resolves a single demo identity so one local user owns wallet and event state;
-ownership checks are already enforced on every read and write, and swapping in
-Convex Auth / Clerk / WorkOS is a one-file change.
-
-## Environment
-See `.env.example`. Only `NEXT_PUBLIC_CONVEX_URL` reaches the browser. Provider
-secrets are added as Convex deployment environment variables when their
-integration milestone begins — never with a `NEXT_PUBLIC_` prefix.
+## Known limitations
+- One shared hackathon demo identity (real authentication is a later milestone).
+- ENS discovery covers the wallet's primary `.eth` name; Aave, governance and
+  bridge items are deterministic fixtures.
+- OpenAI interpretation falls back to the generic "source updated" card when
+  the API is unavailable (currently: the account has no credits).
+- Delivery-status webhook is prepared and verified with signed test payloads;
+  live registration depends on the provider account's permissions.

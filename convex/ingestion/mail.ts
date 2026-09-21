@@ -237,3 +237,41 @@ export const devVerifyProviderIdempotency = internalAction({
     };
   },
 });
+
+/**
+ * DEVELOPMENT ONLY (internal): register (idempotently by client id) the
+ * AgentMail delivery-status webhook for this deployment. Returns only the
+ * webhook id and whether a secret was issued — the secret itself is passed
+ * back for the operator to store as AGENTMAIL_WEBHOOK_SECRET and is never
+ * logged.
+ */
+export const devRegisterWebhook = internalAction({
+  args: { url: v.string() },
+  handler: async (_ctx, args): Promise<{ status: number; webhookId?: string; secret?: string; error?: string }> => {
+    const apiKey = process.env.AGENTMAIL_API_KEY;
+    if (!apiKey) throw new ConvexError("AGENTMAIL_API_KEY is not configured on this deployment");
+    if (!/^https:\/\/[a-z0-9-]+\.convex\.site\/webhooks\/agentmail$/.test(args.url)) {
+      throw new ConvexError("Refusing to register a webhook outside this deployment's convex.site");
+    }
+    const res = await fetch("https://api.agentmail.to/v0/webhooks", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: args.url,
+        client_id: "numa-delivery-status",
+        event_types: ["message.delivered", "message.bounced", "message.rejected", "message.complained"],
+      }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      const body = (() => { try { return JSON.parse(text) as Record<string, unknown>; } catch { return {}; } })();
+      return { status: res.status, error: `${String(body.code ?? "")} ${String(body.message ?? text).slice(0, 120)}`.trim() };
+    }
+    const body = JSON.parse(text) as Record<string, unknown>;
+    return {
+      status: res.status,
+      webhookId: typeof body.webhook_id === "string" ? body.webhook_id : undefined,
+      secret: typeof body.secret === "string" ? body.secret : undefined,
+    };
+  },
+});

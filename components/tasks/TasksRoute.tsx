@@ -1,5 +1,7 @@
 "use client";
 
+import { eventHref } from "@/components/event/EventRoute";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -45,7 +47,7 @@ function TaskRow({ task, now }: { task: TaskWithEvent; now: number | null }) {
         </p>
         {task.event && (
           <Link
-            href={`/event/${task.event._id}`}
+            href={eventHref(task.event._id)}
             className="mt-0.5 block truncate text-[13px] text-ink-secondary hover:text-ink hover:underline"
           >
             {task.event.title}
