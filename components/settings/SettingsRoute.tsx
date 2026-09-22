@@ -44,40 +44,43 @@ function SettingsScreen() {
         </p>
       </header>
 
-      <section className="rounded-(--radius-card) border border-line bg-surface p-5">
-        <h2 className="text-[15px] font-medium">Account</h2>
-        <p className="mt-2 text-[14px] leading-6 text-ink-secondary">
-          {me === undefined
-            ? "…"
-            : me === null
-              ? "No account yet — it is created the first time you add a wallet."
-              : me.isDemoIdentity
-                ? "Shared demo workspace: this deployment uses one hackathon demo identity, so every visitor sees and edits the same demo wallet and inbox. Real sign-in is deferred to a later milestone; ownership checks are already enforced on every read and write."
-                : `Signed in as ${me.displayName ?? "user"}.`}
-        </p>
-      </section>
+      {/* Wide screens: two columns in reading order; stacked below xl. */}
+      <div className="xl:columns-2 xl:gap-6">
+        <section className="break-inside-avoid rounded-(--radius-card) border border-line bg-surface p-5">
+          <h2 className="text-[15px] font-medium">Account</h2>
+          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-ink-secondary">
+            {me === undefined
+              ? "…"
+              : me === null
+                ? "No account yet — it is created the first time you add a wallet."
+                : me.isDemoIdentity
+                  ? "Shared demo workspace: this deployment uses one hackathon demo identity, so every visitor sees and edits the same demo wallet and inbox. Real sign-in is deferred to a later milestone; ownership checks are already enforced on every read and write."
+                  : `Signed in as ${me.displayName ?? "user"}.`}
+          </p>
+        </section>
 
-      <EmailSettings />
+        <EmailSettings />
 
-      <NotificationHistory />
+        <NotificationHistory />
 
-      <MonitoredSources />
+        <MonitoredSources />
 
-      <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
-        <h2 className="text-[15px] font-medium">Demo data</h2>
-        <p className="mt-2 text-[14px] leading-6 text-ink-secondary">
-          Clear inbox items, tasks, notifications and raw observations so the demo
-          seed can be shown from an empty inbox. Wallets are kept. This affects the
-          shared demo workspace for everyone.
-        </p>
-        <div className="mt-4 flex items-center gap-4">
-          <Button variant="danger" size="sm" disabled={busy} onClick={onReset}>
-            {busy ? "Resetting…" : "Reset demo data"}
-          </Button>
-          {message && <p className="text-[13px] text-ink-muted">{message}</p>}
-          <InlineError message={error} />
-        </div>
-      </section>
+        <section className="mt-6 break-inside-avoid rounded-(--radius-card) border border-line bg-surface p-5">
+          <h2 className="text-[15px] font-medium">Demo data</h2>
+          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-ink-secondary">
+            Clear inbox items, tasks, notifications and raw observations so the demo
+            seed can be shown from an empty inbox. Wallets are kept. This affects the
+            shared demo workspace for everyone.
+          </p>
+          <div className="mt-4 flex items-center gap-4">
+            <Button variant="danger" size="sm" disabled={busy} onClick={onReset}>
+              {busy ? "Resetting…" : "Reset demo data"}
+            </Button>
+            {message && <p className="text-[13px] text-ink-muted">{message}</p>}
+            <InlineError message={error} />
+          </div>
+        </section>
+      </div>
     </>
   );
 }

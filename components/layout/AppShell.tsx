@@ -17,6 +17,13 @@ const SECONDARY_NAV = [
   { href: "/settings", label: "Settings" },
 ] as const;
 
+/**
+ * Fluid shell: full width with gutters that scale with the viewport
+ * (16px → 24px → 32px → 40px). Readable widths are applied to prose inside
+ * pages, never to the shell, so lists and cards grow with the screen.
+ */
+const SHELL_GUTTERS = "px-4 sm:px-6 lg:px-8 xl:px-10";
+
 function isActive(pathname: string, href: string): boolean {
   if (href === "/inbox") return pathname === "/" || pathname.startsWith("/inbox") || pathname.startsWith("/event");
   return pathname.startsWith(href);
@@ -29,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-10 border-b border-line bg-canvas/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 sm:h-14 sm:flex-nowrap sm:px-5 sm:py-0">
+        <div className={`flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2 sm:h-14 sm:flex-nowrap sm:py-0 ${SHELL_GUTTERS}`}>
           <Link
             href="/"
             className="shrink-0 text-[15px] font-semibold tracking-tight text-ink"
@@ -83,11 +90,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-24 pt-10">
+      <main className={`w-full flex-1 pb-24 pt-8 sm:pt-10 ${SHELL_GUTTERS}`}>
         {children}
       </main>
       <footer className="border-t border-line">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4 text-[12px] text-ink-muted">
+        <div className={`flex w-full items-center justify-between gap-4 py-4 text-[12px] text-ink-muted ${SHELL_GUTTERS}`}>
           <span>Read-only monitoring. Numa never holds funds or signs transactions.</span>
           <span className="font-mono">ADVISORY</span>
         </div>

@@ -85,7 +85,7 @@ function BriefScreen() {
     <>
       <header className="mb-8">
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Your Numa brief</h1>
-        <p className="mt-2 text-[15px] text-ink-secondary">
+        <p className="mt-2 max-w-3xl text-[15px] text-ink-secondary">
           The few items that matter today, built from your inbox — never from raw wallet data. Delivered by email at your digest time.
         </p>
       </header>
@@ -135,7 +135,7 @@ function BriefScreen() {
             <section className="rounded-(--radius-card) border border-line bg-surface p-6">
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-muted">Your Numa brief</p>
               <h2 className="mt-2 text-[22px] font-semibold tracking-tight">{today.brief.headline}</h2>
-              <p className="mt-1 text-[14px] text-ink-secondary">{today.brief.summary}</p>
+              <p className="mt-1 max-w-3xl text-[14px] text-ink-secondary">{today.brief.summary}</p>
               {today.brief.items.length > 0 && (
                 <ol className="mt-5 divide-y divide-line">
                   {today.brief.items.map((item, i) => (
@@ -148,7 +148,7 @@ function BriefScreen() {
                       <p className="mt-2 text-[16px] font-medium">
                         {i + 1}. <Link href={eventHref(item.eventId)} className="hover:underline">{item.title}</Link>
                       </p>
-                      <p className="mt-1 text-[14px] leading-6 text-ink-secondary">{item.whyItMatters}</p>
+                      <p className="mt-1 max-w-3xl text-[14px] leading-6 text-ink-secondary">{item.whyItMatters}</p>
                       <p className="mt-1 text-[13px]">
                         {item.recommendedAction && <span className="font-medium">Next: {item.recommendedAction}</span>}
                         {item.deadline !== undefined && <span className="text-ink-muted"> · Due {formatDeadline(item.deadline, now)}</span>}

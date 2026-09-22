@@ -38,9 +38,9 @@ export function EmailSettings() {
   }
 
   return (
-    <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
+    <section className="mt-6 break-inside-avoid rounded-(--radius-card) border border-line bg-surface p-5">
       <h2 className="text-[15px] font-medium">Email notifications</h2>
-      <p className="mt-1 text-[13px] leading-5 text-ink-secondary">
+      <p className="mt-1 max-w-3xl text-[13px] leading-5 text-ink-secondary">
         A daily brief of the few items that matter, urgent alerts for actionable high-priority items, and deadline reminders 24h and 1h before.
       </p>
       {prefs === undefined ? (

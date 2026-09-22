@@ -29,7 +29,7 @@ export function NotificationHistory() {
   const rows = useQuery(api.notifications.listNotifications);
   const now = useNow();
   return (
-    <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
+    <section className="mt-6 break-inside-avoid rounded-(--radius-card) border border-line bg-surface p-5">
       <h2 className="text-[15px] font-medium">Recent notifications</h2>
       <p className="mt-1 text-[13px] leading-5 text-ink-secondary">Every email attempt Numa makes is recorded here.</p>
       {rows === undefined ? (

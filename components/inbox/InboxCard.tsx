@@ -65,7 +65,7 @@ export function InboxCard({
           {event.title}
         </Link>
       </h3>
-      <p className="mt-1.5 text-[14px] leading-6 text-ink-secondary">
+      <p className="mt-1.5 max-w-3xl text-[14px] leading-6 text-ink-secondary">
         {event.summary}
       </p>
 

@@ -68,11 +68,11 @@ export function MonitoredSources() {
     feedback?.tone === "error" ? "text-sev-critical" : feedback?.tone === "success" ? "text-success" : "text-ink-muted";
 
   return (
-    <section className="mt-6 rounded-(--radius-card) border border-line bg-surface p-5">
+    <section className="mt-6 break-inside-avoid rounded-(--radius-card) border border-line bg-surface p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[15px] font-medium">Monitored official sources</h2>
-          <p className="mt-1 text-[13px] leading-5 text-ink-secondary">
+          <p className="mt-1 max-w-3xl text-[13px] leading-5 text-ink-secondary">
             Official pages Numa checks for changes. A change only reaches your inbox when
             your wallet has exposure to that protocol.
           </p>
